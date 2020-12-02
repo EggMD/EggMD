@@ -2,6 +2,7 @@ package template
 
 import (
 	"html/template"
+	"net/url"
 	"sync"
 
 	"github.com/EggMD/EggMD/internal/conf"
@@ -19,7 +20,8 @@ func FuncMap() []template.FuncMap {
 			"AppSubURL": func() string {
 				return conf.Server.Subpath
 			},
-			"Safe": Safe,
+			"Safe":        Safe,
+			"EscapePound": EscapePound,
 		}}
 	})
 	return funcMap
@@ -27,4 +29,8 @@ func FuncMap() []template.FuncMap {
 
 func Safe(raw string) template.HTML {
 	return template.HTML(raw)
+}
+
+func EscapePound(str string) string {
+	return url.PathEscape(str)
 }

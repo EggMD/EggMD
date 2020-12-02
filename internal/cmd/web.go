@@ -7,6 +7,7 @@ import (
 	"github.com/EggMD/EggMD/internal/conf"
 	"github.com/EggMD/EggMD/internal/context"
 	"github.com/EggMD/EggMD/internal/route"
+	"github.com/EggMD/EggMD/internal/route/user"
 	"github.com/EggMD/EggMD/internal/template"
 	"github.com/go-macaron/csrf"
 	"github.com/go-macaron/session"
@@ -46,13 +47,20 @@ func runWeb(c *cli.Context) error {
 	m.Use(macaron.Renderer(renderOpt))
 
 	//reqSignIn := context.Toggle(&context.ToggleOptions{SignInRequired: true})
-	//reqSignOut := context.Toggle(&context.ToggleOptions{SignOutRequired: true})
-	//
+	reqSignOut := context.Toggle(&context.ToggleOptions{SignOutRequired: true})
 	//bindIgnErr := binding.BindIgnErr
 
 	m.Group("", func() {
 		m.Get("/", route.Home)
+
+		m.Group("/user", func() {
+			m.Group("/login", func() {
+				m.Combo("").Get(user.Login)
+			})
+			m.Get("/sign_up", user.SignUp)
+		}, reqSignOut)
 	},
+
 		session.Sessioner(session.Options{
 			CookieName:  conf.Session.CookieName,
 			CookiePath:  conf.Server.Subpath,

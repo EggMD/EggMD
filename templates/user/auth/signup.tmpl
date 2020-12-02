@@ -1,0 +1,43 @@
+{{template "base/header" .}}
+<div class="flex-fill d-flex flex-column justify-content-center py-4">
+    <div class="container-tight py-6">
+        <form class="card card-md" action="{{.Link}}" method="post">
+            {{.CSRFTokenHTML}}
+            <div class="card-body">
+                <h2 class="card-title text-center mb-4">用户注册</h2>
+                <div class="mb-3">
+                    <label class="form-label">昵称</label>
+                    <input name="name" type="text" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">用户名</label>
+                    <input name="login_name" type="email" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">电子邮箱</label>
+                    <input name="email" type="email" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">密码</label>
+                    <div class="input-group input-group-flat">
+                        <input name="password" type="password" class="form-control" autocomplete="off">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">确认密码</label>
+                    <div class="input-group input-group-flat">
+                        <input name="retype_password" type="password" class="form-control" autocomplete="off">
+                    </div>
+                </div>
+                <div class="form-footer">
+                    <button type="submit" class="btn btn-primary w-100">注册新账号</button>
+                </div>
+            </div>
+        </form>
+        <div class="text-center text-muted mt">
+            已有账号？ <a href="./sign-in.html" tabindex="-1">登录</a>
+        </div>
+    </div>
+</div>
+
+{{template "base/footer" .}}

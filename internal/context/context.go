@@ -79,13 +79,14 @@ func Contexter() macaron.Handler {
 			Session: sess,
 			Link:    conf.Server.Subpath + strings.TrimSuffix(ctx.Req.URL.Path, "/"),
 		}
+		c.Data["Link"] = template.EscapePound(c.Link)
 		c.Data["PageStartTime"] = time.Now()
 
 		c.Data["CSRFToken"] = x.GetToken()
 		c.Data["CSRFTokenHTML"] = template.Safe(`<input type="hidden" name="_csrf" value="` + x.GetToken() + `">`)
 		log.Trace("Session ID: %s", sess.ID())
 		log.Trace("CSRF Token: %v", c.Data["CSRFToken"])
-		
+
 		ctx.Map(c)
 	}
 }
