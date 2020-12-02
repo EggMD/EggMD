@@ -6,9 +6,12 @@ import (
 
 	"github.com/EggMD/EggMD/internal/conf"
 	"github.com/EggMD/EggMD/internal/context"
+	"github.com/EggMD/EggMD/internal/db"
+	"github.com/EggMD/EggMD/internal/form"
 	"github.com/EggMD/EggMD/internal/route"
 	"github.com/EggMD/EggMD/internal/route/user"
 	"github.com/EggMD/EggMD/internal/template"
+	"github.com/go-macaron/binding"
 	"github.com/go-macaron/csrf"
 	"github.com/go-macaron/session"
 	"github.com/urfave/cli"
@@ -35,6 +38,7 @@ func newMacaron() *macaron.Macaron {
 
 func runWeb(c *cli.Context) error {
 	conf.Init()
+	_, _ = db.Init()
 
 	m := newMacaron()
 
@@ -55,7 +59,8 @@ func runWeb(c *cli.Context) error {
 
 		m.Group("/user", func() {
 			m.Group("/login", func() {
-				m.Combo("").Get(user.Login)
+				m.Combo("").Get(user.Login).
+					Post(binding.Bind(form.SignIn{}), user.LoginPost)
 			})
 			m.Get("/sign_up", user.SignUp)
 		}, reqSignOut)

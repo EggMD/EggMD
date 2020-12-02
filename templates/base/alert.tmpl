@@ -1,0 +1,20 @@
+{{if .Flash.SuccessMsg}}
+    <div class="alert alert-success" role="alert">
+        {{.Flash.SuccessMsg}}
+    </div>
+{{end}}
+{{if .Flash.InfoMsg}}
+    <div class="alert alert-info" role="alert">
+        {{.Flash.InfoMsg}}
+    </div>
+{{end}}
+{{if .Flash.WarningMsg}}
+    <div class="alert alert-warning" role="alert">
+        {{.Flash.WarningMsg}}
+    </div>
+{{end}}
+{{if .Flash.ErrorMsg}}
+    <div class="alert alert-danger" role="alert">
+        {{.Flash.ErrorMsg}}
+    </div>
+{{end}}

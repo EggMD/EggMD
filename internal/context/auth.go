@@ -5,6 +5,7 @@ import (
 	"net/url"
 
 	"github.com/EggMD/EggMD/internal/conf"
+	"github.com/go-macaron/csrf"
 	"gopkg.in/macaron.v1"
 )
 
@@ -17,6 +18,14 @@ type ToggleOptions struct {
 
 func Toggle(options *ToggleOptions) macaron.Handler {
 	return func(c *Context) {
+		// Check CSRF token.
+		if c.Req.Method == "POST" {
+			csrf.Validate(c.Context, c.csrf)
+			if c.Written() {
+				return
+			}
+		}
+
 		// Check non-logged users landing page.
 		if !c.IsLogged && c.Req.RequestURI == "/" && conf.Server.LandingURL != "/" {
 			c.RedirectSubpath(conf.Server.LandingURL)

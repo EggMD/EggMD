@@ -21,7 +21,7 @@ var (
 // UsersStore is the persistent interface for users.
 type UsersStore interface {
 	// Authenticate validates username and password.
-	Authenticate(username, password string) (*User, error)
+	Authenticate(email, password string) (*User, error)
 	// Create creates a new user and persists to database.
 	// It returns ErrUserAlreadyExists when a user with same name already exists,
 	// or ErrEmailAlreadyUsed if the email has been used by another user.
@@ -50,9 +50,9 @@ type CreateUserOpts struct {
 	Admin     bool
 }
 
-func (db *users) Authenticate(loginName, password string) (*User, error) {
+func (db *users) Authenticate(email, password string) (*User, error) {
 	user := new(User)
-	err := db.Where("login_name = ?", loginName).First(user).Error
+	err := db.Where("email = ?", email).First(user).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, errors.Wrap(err, "get user")
 	}

@@ -23,6 +23,11 @@ func Init() (*gorm.DB, error) {
 		log.Fatal("Failed to connect to database: %v", err)
 	}
 
+	err = db.AutoMigrate(&User{})
+	if err != nil {
+		log.Fatal("Failed to auto migrate tables: %v", err)
+	}
+
 	// Initialize stores, sorted in alphabetical order.
 	Users = &users{DB: db}
 

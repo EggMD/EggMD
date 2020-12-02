@@ -2,12 +2,15 @@
 
 <div class="flex-fill d-flex flex-column justify-content-center py-4">
     <div class="container-tight py-6">
-        <form class="card card-md" action="." method="get" autocomplete="off">
+        <form class="card card-md" method="post" autocomplete="off">
+            {{.CSRFTokenHTML}}
             <div class="card-body">
                 <h2 class="card-title text-center mb-4">用户登录</h2>
+                {{template "base/alert" .}}
+
                 <div class="mb-3">
                     <label class="form-label">电子邮箱</label>
-                    <input type="email" class="form-control">
+                    <input name="email" type="email" class="form-control">
                 </div>
                 <div class="mb-2">
                     <label class="form-label">
@@ -17,7 +20,7 @@
                         </span>
                     </label>
                     <div class="input-group input-group-flat">
-                        <input type="password" class="form-control" placeholder="" autocomplete="off">
+                        <input name="password" type="password" class="form-control" placeholder="" autocomplete="off">
                     </div>
                 </div>
                 <div class="mb-2">

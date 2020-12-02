@@ -7,6 +7,7 @@ import (
 
 	"github.com/EggMD/EggMD/internal/conf"
 	"github.com/EggMD/EggMD/internal/db"
+	"github.com/EggMD/EggMD/internal/form"
 	"github.com/EggMD/EggMD/internal/template"
 	"github.com/go-macaron/csrf"
 	"github.com/go-macaron/session"
@@ -61,6 +62,17 @@ func (c *Context) HasError() bool {
 // Success responses template with status http.StatusOK.
 func (c *Context) Success(name string) {
 	c.HTML(http.StatusOK, name)
+}
+
+// RenderWithErr used for page has form validation but need to prompt error to users.
+func (c *Context) RenderWithErr(msg, tpl string, f interface{}) {
+	if f != nil {
+		form.Assign(f, c.Data)
+	}
+	c.Flash.ErrorMsg = msg
+	c.Data["Flash"] = c.Flash
+
+	c.HTML(http.StatusOK, tpl)
 }
 
 // RedirectSubpath responses redirection with given location and status.
