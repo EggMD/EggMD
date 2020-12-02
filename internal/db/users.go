@@ -25,7 +25,7 @@ type UsersStore interface {
 	// Create creates a new user and persists to database.
 	// It returns ErrUserAlreadyExists when a user with same name already exists,
 	// or ErrEmailAlreadyUsed if the email has been used by another user.
-	Create(username, email string, opts CreateUserOpts) (*User, error)
+	Create(opts CreateUserOpts) (*User, error)
 	// GetByEmail returns the user with given email.
 	GetByEmail(email string) (*User, error)
 	// GetByID returns the user with given ID. It returns ErrUserNotFound when not found.
@@ -64,13 +64,17 @@ func (db *users) Authenticate(email, password string) (*User, error) {
 	return nil, ErrBadCredentials
 }
 
-func (db *users) Create(username, email string, opts CreateUserOpts) (*User, error) {
-	err := isUsernameAllowed(username)
+func (db *users) Create(opts CreateUserOpts) (*User, error) {
+	name := opts.Name
+	loginName := opts.LoginName
+	email := opts.Email
+
+	err := isUsernameAllowed(name)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = db.GetByLoginName(username)
+	_, err = db.GetByLoginName(loginName)
 	if err == nil {
 		return nil, ErrUserAlreadyExists
 	} else if err != ErrUserNotFound {
@@ -85,7 +89,7 @@ func (db *users) Create(username, email string, opts CreateUserOpts) (*User, err
 	}
 
 	user := &User{
-		Name:        username,
+		Name:        name,
 		Email:       email,
 		Password:    opts.Password,
 		LoginName:   opts.LoginName,

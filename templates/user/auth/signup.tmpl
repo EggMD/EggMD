@@ -1,7 +1,7 @@
 {{template "base/header" .}}
 <div class="flex-fill d-flex flex-column justify-content-center py-4">
     <div class="container-tight py-6">
-        <form class="card card-md" action="{{.Link}}" method="post">
+        <form class="card card-md" method="post">
             {{.CSRFTokenHTML}}
             <div class="card-body">
                 <h2 class="card-title text-center mb-4">用户注册</h2>
@@ -11,7 +11,7 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label">用户名</label>
-                    <input name="login_name" type="email" class="form-control">
+                    <input name="login_name" type="text" class="form-control">
                 </div>
                 <div class="mb-3">
                     <label class="form-label">电子邮箱</label>
@@ -26,7 +26,7 @@
                 <div class="mb-3">
                     <label class="form-label">确认密码</label>
                     <div class="input-group input-group-flat">
-                        <input name="retype_password" type="password" class="form-control" autocomplete="off">
+                        <input name="retype" type="password" class="form-control" autocomplete="off">
                     </div>
                 </div>
                 <div class="form-footer">
@@ -35,7 +35,7 @@
             </div>
         </form>
         <div class="text-center text-muted mt">
-            已有账号？ <a href="./sign-in.html" tabindex="-1">登录</a>
+            已有账号？ <a href="/user/login" tabindex="-1">登录</a>
         </div>
     </div>
 </div>

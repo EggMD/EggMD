@@ -62,7 +62,10 @@ func runWeb(c *cli.Context) error {
 				m.Combo("").Get(user.Login).
 					Post(binding.Bind(form.SignIn{}), user.LoginPost)
 			})
-			m.Get("/sign_up", user.SignUp)
+			m.Group("/sign_up", func() {
+				m.Combo("").Get(user.SignUp).
+					Post(binding.Bind(form.Register{}), user.SignUpPost)
+			})
 		}, reqSignOut)
 	},
 

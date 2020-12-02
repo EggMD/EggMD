@@ -71,3 +71,41 @@ func SignUp(c *context.Context) {
 
 	c.Success(SIGNUP)
 }
+
+func SignUpPost(c *context.Context, f form.Register) {
+	c.Title("注册")
+
+	if c.HasError() {
+		c.Success(SIGNUP)
+		return
+	}
+
+	if f.Password != f.Retype {
+		c.FormErr("Password")
+		c.RenderWithErr("两次输入的密码不匹配", SIGNUP, &f)
+		return
+	}
+
+	if _, err := db.Users.Create(db.CreateUserOpts{
+		Name:      f.Name,
+		LoginName: f.LoginName,
+		Email:     f.Email,
+		Password:  f.Password,
+		Admin:     false,
+	}); err != nil {
+		switch err {
+		case db.ErrUserAlreadyExists:
+			c.FormErr("LoginName")
+			c.RenderWithErr("用户名已存在", SIGNUP, &f)
+		case db.ErrEmailAlreadyUsed:
+			c.FormErr("Email")
+			c.RenderWithErr("电子邮箱已注册", SIGNUP, &f)
+		default:
+			c.Error(400, "create user")
+		}
+		return
+	}
+
+	c.Flash.Success("注册成功！")
+	c.RedirectSubpath("/user/login")
+}
