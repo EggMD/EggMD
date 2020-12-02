@@ -109,3 +109,10 @@ func SignUpPost(c *context.Context, f form.Register) {
 	c.Flash.Success("注册成功！")
 	c.RedirectSubpath("/user/login")
 }
+
+func SignOut(c *context.Context) {
+	_ = c.Session.Flush()
+	_ = c.Session.Destory(c.Context)
+	c.SetCookie(conf.Session.CSRFCookieName, "", -1, conf.Server.Subpath)
+	c.RedirectSubpath("/")
+}

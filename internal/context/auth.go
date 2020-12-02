@@ -5,8 +5,11 @@ import (
 	"net/url"
 
 	"github.com/EggMD/EggMD/internal/conf"
+	"github.com/EggMD/EggMD/internal/db"
 	"github.com/go-macaron/csrf"
+	"github.com/go-macaron/session"
 	"gopkg.in/macaron.v1"
+	log "unknwon.dev/clog/v2"
 )
 
 type ToggleOptions struct {
@@ -54,4 +57,23 @@ func Toggle(options *ToggleOptions) macaron.Handler {
 			c.PageIs("Admin")
 		}
 	}
+}
+
+// authenticatedUser returns the user object of the authenticated user.
+func authenticatedUser(sess session.Store) *db.User {
+	uid := sess.Get("uid")
+	if uid == nil {
+		return nil
+	}
+	if id, ok := uid.(uint); ok {
+		u, err := db.Users.GetByID(id)
+		if err != nil {
+			if err != db.ErrUserNotFound {
+				log.Error("Failed to get user by ID: %v", err)
+			}
+			return nil
+		}
+		return u
+	}
+	return nil
 }

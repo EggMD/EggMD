@@ -67,6 +67,10 @@ func runWeb(c *cli.Context) error {
 					Post(binding.Bind(form.Register{}), user.SignUpPost)
 			})
 		}, reqSignOut)
+
+		m.Group("/user", func() {
+			m.Post("/logout", user.SignOut)
+		})
 	},
 
 		session.Sessioner(session.Options{
@@ -85,6 +89,8 @@ func runWeb(c *cli.Context) error {
 		}),
 		context.Contexter(),
 	)
+
+	m.NotFound(route.NotFound)
 
 	if c.IsSet("port") {
 		conf.Server.HTTPPort = c.String("port")

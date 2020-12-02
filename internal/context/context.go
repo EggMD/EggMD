@@ -94,6 +94,21 @@ func Contexter() macaron.Handler {
 		c.Data["Link"] = template.EscapePound(c.Link)
 		c.Data["PageStartTime"] = time.Now()
 
+		// Get user from session or header when possible
+		c.User = authenticatedUser(c.Session)
+
+		if c.User != nil {
+			c.IsLogged = true
+			c.Data["IsLogged"] = c.IsLogged
+			c.Data["LoggedUser"] = c.User
+			c.Data["LoggedUserID"] = c.User.ID
+			c.Data["LoggedName"] = c.User.Name
+			c.Data["IsAdmin"] = c.User.IsAdmin
+		} else {
+			c.Data["LoggedUserID"] = 0
+			c.Data["LoggedUserName"] = ""
+		}
+
 		c.Data["CSRFToken"] = x.GetToken()
 		c.Data["CSRFTokenHTML"] = template.Safe(`<input type="hidden" name="_csrf" value="` + x.GetToken() + `">`)
 		log.Trace("Session ID: %s", sess.ID())

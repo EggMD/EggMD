@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/EggMD/EggMD/internal/conf"
+	"github.com/EggMD/EggMD/internal/tool"
 )
 
 var (
@@ -22,6 +23,7 @@ func FuncMap() []template.FuncMap {
 			},
 			"Safe":        Safe,
 			"EscapePound": EscapePound,
+			"AvatarLink":  tool.AvatarLink,
 		}}
 	})
 	return funcMap
