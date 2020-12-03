@@ -321,24 +321,22 @@ func Transform(a, b *Operation) (*Operation, *Operation, error) {
 func Unmarshal(ops []interface{}) (*Operation, error) {
 	top := &Operation{}
 	for _, o := range ops {
-		switch o.(type) {
+		switch o := o.(type) {
 		case int:
-			n := o.(int)
-			if n > 0 {
-				top.Retain(n)
+			if o > 0 {
+				top.Retain(o)
 			} else {
-				top.Delete(-n)
+				top.Delete(-o)
 			}
 		case float64:
-			n := int(o.(float64))
+			n := int(o)
 			if n > 0 {
 				top.Retain(n)
 			} else {
 				top.Delete(-n)
 			}
 		case string:
-			s := o.(string)
-			top.Insert(s)
+			top.Insert(o)
 		default:
 			return nil, ErrUnmarshalFailed
 		}

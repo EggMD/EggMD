@@ -70,11 +70,11 @@ func unmarshalRange(data map[string]interface{}) (*Range, error) {
 }
 
 func parseNumber(n interface{}) (int, bool) {
-	switch n.(type) {
+	switch n := n.(type) {
 	case int:
-		return n.(int), true
+		return n, true
 	case float64:
-		return int(n.(float64)), true
+		return int(n), true
 	}
 	return 0, false
 }
