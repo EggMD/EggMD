@@ -25,6 +25,8 @@ type Context struct {
 	Link     string // Current request URL
 	User     *db.User
 	IsLogged bool
+
+	Doc *db.Document
 }
 
 // Title sets the "Title" field in template data.

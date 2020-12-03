@@ -9,12 +9,15 @@ import (
 	"github.com/EggMD/EggMD/internal/db"
 	"github.com/EggMD/EggMD/internal/form"
 	"github.com/EggMD/EggMD/internal/route"
+	"github.com/EggMD/EggMD/internal/route/document"
 	"github.com/EggMD/EggMD/internal/route/user"
+	"github.com/EggMD/EggMD/internal/socket"
 	"github.com/EggMD/EggMD/internal/template"
 	"github.com/go-macaron/binding"
 	"github.com/go-macaron/csrf"
 	"github.com/go-macaron/session"
 	"github.com/urfave/cli"
+	"github.com/wuhan005/macaron-sockets"
 	"gopkg.in/macaron.v1"
 	log "unknwon.dev/clog/v2"
 )
@@ -50,7 +53,7 @@ func runWeb(c *cli.Context) error {
 	}
 	m.Use(macaron.Renderer(renderOpt))
 
-	//reqSignIn := context.Toggle(&context.ToggleOptions{SignInRequired: true})
+	reqSignIn := context.Toggle(&context.ToggleOptions{SignInRequired: true})
 	reqSignOut := context.Toggle(&context.ToggleOptions{SignOutRequired: true})
 	//bindIgnErr := binding.BindIgnErr
 
@@ -71,6 +74,16 @@ func runWeb(c *cli.Context) error {
 		m.Group("/user", func() {
 			m.Post("/logout", user.SignOut)
 		})
+
+		m.Group("/doc", func() {
+			m.Post("/new", document.New)
+		}, reqSignIn)
+
+		m.Group("/:shortid", func() {
+			m.Get("/", document.Editor)
+		}, context.DocumentAssignment(), reqSignIn)
+
+		m.Get("/socket/:shortid", sockets.JSON(socket.EventMessage{}), socket.Handler, reqSignIn)
 	},
 
 		session.Sessioner(session.Options{

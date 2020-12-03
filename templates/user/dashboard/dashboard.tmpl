@@ -1,0 +1,36 @@
+{{template "base/header" .}}
+
+
+<div class="page-header d-print-none">
+    <div class="row align-items-center">
+        <div class="col">
+            <!-- Page pre-title -->
+            <div class="page-pretitle">
+                仪表盘
+            </div>
+            <h2 class="page-title">
+                我的文档
+            </h2>
+        </div>
+        <!-- Page title actions -->
+        <div class="col-auto ml-auto d-print-none">
+            <div class="btn-list">
+                <form action="{{AppSubURL}}/doc/new" method="POST">
+                    {{.CSRFTokenHTML}}
+                    <button type="submit" class="btn btn-primary d-none d-sm-inline-block">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
+                             stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round"
+                             stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        新建共享文档
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{template "base/footer" .}}

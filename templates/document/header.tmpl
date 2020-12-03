@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+    <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
+    {{if not .PageIsAdmin}}
+        <meta name="author" content=""/>
+        <meta name="description" content=""/>
+        <meta name="keywords" content="">
+    {{end}}
+    <meta name="referrer" content="no-referrer"/>
+    <meta name="_csrf" content="{{.CSRFToken}}"/>
+
+
+    <link rel="shortcut icon" href="{{AppSubURL}}/img/favicon.png"/>
+
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="{{AppSubURL}}/css/tabler.min.css">
+    <link rel="stylesheet" href="{{AppSubURL}}/css/tabler-vendors.min.css"/>
+    <link media="all" rel="stylesheet" href="{{AppSubURL}}/css/codemirror.css">
+
+    <!-- JavaScript -->
+    <script src="{{AppSubURL}}/js/tabler.min.js"></script>
+    <script src="{{AppSubURL}}/js/libs/bootstrap.bundle.min.js"></script>
+
+    <title>{{if .Title}}{{.Title}} - {{end}}EggMD</title>
+
+</head>
+<body class="antialiased">
+<header class="navbar navbar-expand-md navbar-light d-print-none">
+    <div class="container-xl">
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <a href="/" class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pr-0 pr-md-3">
+            <img src="/assets/eggmd.svg" width="42" height="40" alt="EggMD" class="navbar-brand-image">
+            EggMD
+        </a>
+        <div class="navbar-nav flex-row order-md-last">
+            <div class="nav-item dropdown">
+                <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-toggle="dropdown">
+                            <span class="avatar avatar-sm"
+                                  style="background-image: url({{ .LoggedUser.Email | AvatarLink }})"></span>
+                    <div class="d-none d-xl-block pl-2">
+                        <div>{{.LoggedName}}</div>
+                        <div class="mt-1 small text-muted"></div>
+                    </div>
+                </a>
+                <div class="dropdown-menu dropdown-menu-right dropdown-menu-arrow">
+                    <a href="#" class="dropdown-item">个人信息</a>
+                    <div class="dropdown-divider"></div>
+                    <a href="#" class="dropdown-item">设置</a>
+                    <form action="{{AppSubURL}}/user/logout" method="POST">
+                        {{.CSRFTokenHTML}}
+                        <button class="dropdown-item">登出</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="collapse navbar-collapse" id="navbar-menu">
+
+        </div>
+    </div>
+</header>
+<div class="page">
