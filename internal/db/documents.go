@@ -15,6 +15,7 @@ type DocumentsStore interface {
 	Create(ownerID uint) (*Document, error)
 
 	GetDocByShortID(shortID string) (*Document, error)
+	UpdateByShortID(shortID string, content string)
 }
 
 var Documents DocumentsStore
@@ -52,6 +53,10 @@ func (db *documents) GetDocByShortID(shortID string) (*Document, error) {
 		return nil, err
 	}
 	return d, nil
+}
+
+func (db *documents) UpdateByShortID(shortID string, content string) {
+	db.Model(&Document{}).Where("short_id = ?", shortID).Update("content", content)
 }
 
 // GetShortID returns a random user salt token.

@@ -55,6 +55,9 @@ func Handler(ctx *context.Context, receiver <-chan *EventMessage, sender chan<- 
 			docSession.BroadcastExcept(client, &EventMessage{"quit", client.ID})
 
 		case err := <-errorChannel:
+			docSession.removeClient(client)
+			docSession.BroadcastExcept(client, &EventMessage{"quit", client.ID})
+			
 			log.Error("connection error: %v", err)
 			return 500, "an error occurred"
 		}

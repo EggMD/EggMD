@@ -31,6 +31,9 @@ func (s *Stream) newDocument(shortID, content string) *DocSession {
 	defer s.Unlock()
 	doc := NewDocSession(shortID, content)
 	s.documents[shortID] = doc
+
+	go doc.AutoSaveRoutine()
+
 	return doc
 }
 
@@ -42,4 +45,10 @@ func (s *Stream) getDocument(shortID string) (*DocSession, error) {
 		return nil, errors.New("document session not found")
 	}
 	return doc, nil
+}
+
+func (s *Stream) removeDocument(shortID string) {
+	s.Lock()
+	defer s.Unlock()
+	delete(s.documents, shortID)
 }
