@@ -62,6 +62,7 @@ func (d *DocSession) appendClient(client *Client) {
 	defer d.Unlock()
 
 	d.Clients = append(d.Clients, client)
+	d.SendClients()
 }
 
 func (d *DocSession) removeClient(client *Client) {
@@ -84,6 +85,8 @@ func (d *DocSession) removeClient(client *Client) {
 		d.Save()
 		stream.removeDocument(d.shortID)
 	}
+	
+	d.SendClients()
 }
 
 func (d *DocSession) BroadcastExcept(client *Client, msg *EventMessage) {
@@ -91,6 +94,12 @@ func (d *DocSession) BroadcastExcept(client *Client, msg *EventMessage) {
 		if c != client {
 			c.out <- msg
 		}
+	}
+}
+
+func (d *DocSession) Broadcast(msg *EventMessage) {
+	for _, c := range d.Clients {
+		c.out <- msg
 	}
 }
 
@@ -139,4 +148,11 @@ func (d *DocSession) AddOperation(revision int, op *operation.Operation) (*opera
 func (d *DocSession) Save() {
 	log.Trace("Save document: %v", d.shortID)
 	db.Documents.UpdateByShortID(d.shortID, d.content)
+}
+
+func (d *DocSession) SendClients() {
+	d.Broadcast(&EventMessage{
+		Name: "clients",
+		Data: d.Clients,
+	})
 }

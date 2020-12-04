@@ -38,6 +38,11 @@
             EggMD
         </a>
         <div class="navbar-nav flex-row order-md-last">
+            <div class="nav-item mr-3">
+                <span id="connectingBadge" class="badge bg-yellow-lt" style="display: none;">CONNECTING</span>
+                <span id="onlineBadge" class="badge bg-blue-lt" style="display: none;"></span>
+                <span id="disconnectedBadge" class="badge bg-red-lt" style="display: none;">DISCONNECTED</span>
+            </div>
             <div class="nav-item dropdown">
                 <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-toggle="dropdown">
                             <span class="avatar avatar-sm"
@@ -49,12 +54,6 @@
                 </a>
                 <div class="dropdown-menu dropdown-menu-right dropdown-menu-arrow">
                     <a href="#" class="dropdown-item">个人信息</a>
-                    <div class="dropdown-divider"></div>
-                    <a href="#" class="dropdown-item">设置</a>
-                    <form action="{{AppSubURL}}/user/logout" method="POST">
-                        {{.CSRFTokenHTML}}
-                        <button class="dropdown-item">登出</button>
-                    </form>
                 </div>
             </div>
         </div>
