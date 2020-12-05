@@ -58,6 +58,7 @@ func (db *documents) GetDocByShortID(shortID string) (*Document, error) {
 }
 
 type UpdateDocOptions struct {
+	Title              string
 	Content            string
 	LastModifiedUserID uint
 }
@@ -65,6 +66,7 @@ type UpdateDocOptions struct {
 func (db *documents) UpdateByShortID(shortID string, opts UpdateDocOptions) error {
 	tx := db.Begin()
 	sess := tx.Model(&Document{}).Where("short_id = ?", shortID).Updates(map[string]interface{}{
+		"title":                 opts.Title,
 		"content":               opts.Content,
 		"last_modified_user_id": opts.LastModifiedUserID,
 	})

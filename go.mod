@@ -12,6 +12,7 @@ require (
 	github.com/unknwon/com v1.0.1
 	github.com/urfave/cli v1.22.5
 	github.com/wuhan005/macaron-sockets v0.3.0
+	github.com/yuin/goldmark v1.2.1
 	golang.org/x/crypto v0.0.0-20201124201722-c8d3bf9c5392
 	gopkg.in/macaron.v1 v1.4.0
 	gorm.io/driver/mysql v1.0.3

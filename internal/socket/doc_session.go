@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/EggMD/EggMD/internal/db"
+	"github.com/EggMD/EggMD/internal/mdutil"
 	"github.com/EggMD/EggMD/internal/ot/operation"
 	"github.com/EggMD/EggMD/internal/ot/selection"
 	"github.com/pkg/errors"
@@ -149,6 +150,7 @@ func (d *DocSession) AddOperation(revision int, op *operation.Operation) (*opera
 func (d *DocSession) Save() {
 	log.Trace("Save document: %v", d.ShortID)
 	opt := db.UpdateDocOptions{
+		Title:              mdutil.ParseTitle(d.Content),
 		Content:            d.Content,
 		LastModifiedUserID: d.LastModifiedUserID,
 	}
