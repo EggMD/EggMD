@@ -36,7 +36,7 @@ func Handler(ctx *context.Context, receiver <-chan *EventMessage, sender chan<- 
 	// Send document content, revision, connected clients.
 	sender <- &EventMessage{
 		"doc", map[string]interface{}{
-			"document": docSession.content,
+			"document": docSession.Content,
 			"revision": len(docSession.Operations),
 			"clients":  docSession.Clients,
 		},
@@ -57,7 +57,7 @@ func Handler(ctx *context.Context, receiver <-chan *EventMessage, sender chan<- 
 		case err := <-errorChannel:
 			docSession.removeClient(client)
 			docSession.BroadcastExcept(client, &EventMessage{"quit", client.ID})
-			
+
 			log.Error("connection error: %v", err)
 			return 500, "an error occurred"
 		}

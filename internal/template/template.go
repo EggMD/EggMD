@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"net/url"
 	"sync"
+	"time"
 
 	"github.com/EggMD/EggMD/internal/conf"
 	"github.com/EggMD/EggMD/internal/tool"
@@ -21,7 +22,13 @@ func FuncMap() []template.FuncMap {
 			"AppSubURL": func() string {
 				return conf.Server.Subpath
 			},
-			"Safe":        Safe,
+			"Safe": Safe,
+			"DateFmtLong": func(t time.Time) string {
+				return t.Format("2006-01-02 15:04:05")
+			},
+			"DateFmtShort": func(t time.Time) string {
+				return t.Format("2006-01-02")
+			},
 			"EscapePound": EscapePound,
 			"AvatarLink":  tool.AvatarLink,
 		}}

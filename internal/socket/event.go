@@ -18,7 +18,7 @@ func handleEvent(doc *DocSession, client *Client, evt *EventMessage) {
 			"client_id": client.ID,
 			"username":  client.Name,
 		}})
-		
+
 	case "op":
 		// data: [revision, ops, selection?]
 		data, ok := evt.Data.([]interface{})
@@ -82,4 +82,6 @@ func handleEvent(doc *DocSession, client *Client, evt *EventMessage) {
 		doc.SetSelection(client, sel)
 		doc.BroadcastExcept(client, &EventMessage{"sel", []interface{}{client.ID, sel.Marshal()}})
 	}
+	
+	doc.LastModifiedUserID = client.ID
 }

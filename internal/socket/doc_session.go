@@ -20,20 +20,21 @@ type DocSession struct {
 	sync.Mutex
 
 	// Document data
-	shortID string
-	content string
+	ShortID string
+	Content string
 
 	Clients []*Client // The connection clients
 
-	Operations []*operation.Operation
-	EventChan  chan ConnEvent
-	Done       chan struct{}
+	Operations         []*operation.Operation
+	LastModifiedUserID uint
+	EventChan          chan ConnEvent
+	Done               chan struct{}
 }
 
 func NewDocSession(shortID string, content string) *DocSession {
 	return &DocSession{
-		shortID: shortID,
-		content: content,
+		ShortID: shortID,
+		Content: content,
 
 		Mutex:     sync.Mutex{},
 		Clients:   make([]*Client, 0),
@@ -51,7 +52,7 @@ func (d *DocSession) AutoSaveRoutine() {
 			d.Save()
 		case <-d.Done:
 			close(d.Done)
-			log.Trace("Stop auto save routine: %v", d.shortID)
+			log.Trace("Stop auto save routine: %v", d.ShortID)
 			return
 		}
 	}
@@ -83,9 +84,9 @@ func (d *DocSession) removeClient(client *Client) {
 	if len(d.Clients) == 0 {
 		d.Done <- struct{}{}
 		d.Save()
-		stream.removeDocument(d.shortID)
+		stream.removeDocument(d.ShortID)
 	}
-	
+
 	d.SendClients()
 }
 
@@ -132,22 +133,26 @@ func (d *DocSession) AddOperation(revision int, op *operation.Operation) (*opera
 	}
 
 	// apply transformed op on the doc
-	doc, err := op.Apply(d.content)
+	doc, err := op.Apply(d.Content)
 	if err != nil {
 		return nil, err
 	}
 
 	d.Lock()
 	defer d.Unlock()
-	d.content = doc
+	d.Content = doc
 	d.Operations = append(d.Operations, op)
 
 	return op, nil
 }
 
 func (d *DocSession) Save() {
-	log.Trace("Save document: %v", d.shortID)
-	db.Documents.UpdateByShortID(d.shortID, d.content)
+	log.Trace("Save document: %v", d.ShortID)
+	opt := db.UpdateDocOptions{
+		Content:            d.Content,
+		LastModifiedUserID: d.LastModifiedUserID,
+	}
+	_ = db.Documents.UpdateByShortID(d.ShortID, opt)
 }
 
 func (d *DocSession) SendClients() {

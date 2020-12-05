@@ -26,6 +26,14 @@ type User struct {
 	AvatarEmail string `gorm:"NOT NULL"`
 }
 
+func (u *User) GetDocuments(page, pageSize int) (DocumentList, error) {
+	return Documents.GetUserDocuments(&UserDocOptions{
+		UserID:   u.ID,
+		Page:     page,
+		PageSize: pageSize,
+	})
+}
+
 // EncodePassword encodes password to safe format.
 func (u *User) EncodePassword() {
 	newPasswd := pbkdf2.Key([]byte(u.Password), []byte(u.Salt), 10000, 50, sha256.New)
