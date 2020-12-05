@@ -63,10 +63,21 @@ type UpdateDocOptions struct {
 }
 
 func (db *documents) UpdateByShortID(shortID string, opts UpdateDocOptions) error {
-	return db.Debug().Model(&Document{}).Where("short_id = ?", shortID).Updates(map[string]interface{}{
+	tx := db.Begin()
+	sess := tx.Model(&Document{}).Where("short_id = ?", shortID).Updates(map[string]interface{}{
 		"content":               opts.Content,
 		"last_modified_user_id": opts.LastModifiedUserID,
-	}).Error
+	})
+	if err := sess.Error; err != nil {
+		sess.Rollback()
+		return err
+	}
+	if sess.RowsAffected != 1 {
+		sess.Rollback()
+		return nil
+	}
+	sess.Commit()
+	return nil
 }
 
 type UserDocOptions struct {
