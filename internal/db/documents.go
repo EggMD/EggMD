@@ -127,6 +127,9 @@ func (db *documents) GetUserDocuments(opts *UserDocOptions) (DocumentList, error
 	err := db.Debug().Model(&Document{}).Where("owner_id = ?", opts.UserID).
 		Offset((opts.Page - 1) * opts.PageSize).Limit(opts.PageSize).
 		Order("`updated_at` DESC").Find(&docs).Error
+	if err != nil {
+		return nil, err
+	}
 
 	if err = docs.loadAttributes(db.DB); err != nil {
 		return nil, err
