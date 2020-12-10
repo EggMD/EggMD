@@ -12,10 +12,13 @@ var (
 
 // DocumentsStore is the persistent interface for users.
 type DocumentsStore interface {
+	// Create creates a new document belongs to one user with the given ownerID.
 	Create(ownerID uint) (*Document, error)
-
+	// GetDocByShortID returns a document with the given shortID.
 	GetDocByShortID(shortID string) (*Document, error)
+	// UpdateByShortID updates a document with the given shortID.
 	UpdateByShortID(shortID string, opts UpdateDocOptions) error
+	// GetUserDocuments returns a user's document list.
 	GetUserDocuments(opts *UserDocOptions) (DocumentList, error)
 }
 

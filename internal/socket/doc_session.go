@@ -115,10 +115,10 @@ func (d *DocSession) AddOperation(revision int, op *operation.Operation) (*opera
 	if revision < 0 || len(d.Operations) < revision {
 		return nil, ErrInvalidRevision
 	}
-	// find concurrent operations client isn't yet aware of
+	// Find concurrent operations client isn't yet aware of.
 	otherOps := d.Operations[revision:]
 
-	// transform given operation against these operations
+	// Transform given operation against these operations.
 	for _, otherOp := range otherOps {
 		op1, _, err := operation.Transform(op, otherOp)
 		if err != nil {
@@ -133,7 +133,7 @@ func (d *DocSession) AddOperation(revision int, op *operation.Operation) (*opera
 		op = op1
 	}
 
-	// apply transformed op on the doc
+	// Apply transformed op on the doc.
 	doc, err := op.Apply(d.Content)
 	if err != nil {
 		return nil, err

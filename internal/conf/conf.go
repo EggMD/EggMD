@@ -9,6 +9,7 @@ func init() {
 	_ = log.NewConsole()
 }
 
+// Init parses the config file and set the config.
 func Init() {
 	var conf struct {
 		Security SecurityOpts

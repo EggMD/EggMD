@@ -9,6 +9,7 @@ import (
 
 const UNTITLED = "Untitled"
 
+// ParseTitle returns the document title by parsing the giving markdown.
 func ParseTitle(content string) string {
 	reader := text.NewReader([]byte(content))
 	p := goldmark.DefaultParser()

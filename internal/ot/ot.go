@@ -7,5 +7,5 @@ const (
 	TextEncodingTypeUTF16
 )
 
-// use utf-8 by default
+// Use utf-8 by default
 var TextEncoding = TextEncodingTypeUTF8

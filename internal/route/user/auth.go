@@ -23,10 +23,7 @@ func Login(c *context.Context) {
 	if len(redirectTo) > 0 {
 		c.SetCookie("redirect_to", redirectTo, 0, conf.Server.Subpath)
 	}
-	//} else {
-	//	redirectTo, _ = url.QueryUnescape(c.GetCookie("redirect_to"))
-	//}
-
+	
 	c.Success("user/auth/login")
 }
 

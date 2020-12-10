@@ -9,6 +9,7 @@ import (
 	log "unknwon.dev/clog/v2"
 )
 
+// Init connects to the database.
 func Init() (*gorm.DB, error) {
 	dns := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		conf.Database.User,

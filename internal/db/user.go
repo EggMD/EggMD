@@ -26,6 +26,7 @@ type User struct {
 	AvatarEmail string `gorm:"NOT NULL"`
 }
 
+// GetDocuments returns the user's documents which belong to itself.
 func (u *User) GetDocuments(page, pageSize int) (DocumentList, error) {
 	return Documents.GetUserDocuments(&UserDocOptions{
 		UserID:   u.ID,
