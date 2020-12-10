@@ -17,6 +17,7 @@ func ParseTitle(content string) string {
 	if mdAST == nil || mdAST.FirstChild() == nil {
 		return UNTITLED
 	}
+
 	if mdAST.FirstChild().Kind().String() == "Heading" {
 		heading, ok := mdAST.FirstChild().(*ast.Heading)
 		if !ok {
@@ -26,7 +27,9 @@ func ParseTitle(content string) string {
 		if !ok {
 			return UNTITLED
 		}
+
 		return content[txt.Segment.Start:txt.Segment.Stop]
 	}
+
 	return UNTITLED
 }

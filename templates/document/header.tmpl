@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
     <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
     {{if not .PageIsAdmin}}
-        <meta name="author" content=""/>
-        <meta name="description" content=""/>
-        <meta name="keywords" content="">
+    <meta name="author" content=""/>
+    <meta name="description" content=""/>
+    <meta name="keywords" content="">
     {{end}}
     <meta name="referrer" content="no-referrer"/>
     <meta name="_csrf" content="{{.CSRFToken}}"/>
@@ -16,9 +16,11 @@
     <link rel="shortcut icon" href="{{AppSubURL}}/img/favicon.png"/>
 
     <!-- Stylesheet -->
+    <link rel="stylesheet" href="{{AppSubURL}}/css/markdown.css"/>
     <link rel="stylesheet" href="{{AppSubURL}}/css/tabler.min.css">
     <link rel="stylesheet" href="{{AppSubURL}}/css/tabler-vendors.min.css"/>
     <link media="all" rel="stylesheet" href="{{AppSubURL}}/css/codemirror.css">
+    <link rel="stylesheet" href="{{AppSubURL}}/css/editor.css"/>
 
     <!-- JavaScript -->
     <script src="{{AppSubURL}}/js/tabler.min.js"></script>
@@ -28,38 +30,41 @@
 
 </head>
 <body class="antialiased">
-<header class="navbar navbar-expand-md navbar-light d-print-none">
-    <div class="container-xl">
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <a href="/" class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pr-0 pr-md-3">
-            <img src="/assets/eggmd.svg" width="42" height="40" alt="EggMD" class="navbar-brand-image">
-            EggMD
-        </a>
-        <div class="navbar-nav flex-row order-md-last">
-            <div class="nav-item mr-3">
-                <span id="connectingBadge" class="badge bg-yellow-lt" style="display: none;">CONNECTING</span>
-                <span id="onlineBadge" class="badge bg-blue-lt" style="display: none;"></span>
-                <span id="disconnectedBadge" class="badge bg-red-lt" style="display: none;">DISCONNECTED</span>
-            </div>
-            <div class="nav-item dropdown">
-                <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-toggle="dropdown">
+<div class="page">
+    <div class="sticky-top">
+        <header class="navbar navbar-expand-md navbar-light d-print-none">
+            <div class="container-xl">
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <a href="/" class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pr-0 pr-md-3">
+                    <img src="/assets/eggmd.svg" width="42" height="40" alt="EggMD" class="navbar-brand-image">
+                    EggMD
+                </a>
+                <div class="navbar-nav flex-row order-md-last">
+                    <div class="nav-item mr-3">
+                        <span id="connectingBadge" class="badge bg-yellow-lt" style="display: none;">CONNECTING</span>
+                        <span id="onlineBadge" class="badge bg-blue-lt" style="display: none;"></span>
+                        <span id="disconnectedBadge" class="badge bg-red-lt" style="display: none;">DISCONNECTED</span>
+                    </div>
+                    <div class="nav-item dropdown">
+                        <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-toggle="dropdown">
                             <span class="avatar avatar-sm"
                                   style="background-image: url({{ .LoggedUser.Email | AvatarLink }})"></span>
-                    <div class="d-none d-xl-block pl-2">
-                        <div>{{.LoggedName}}</div>
-                        <div class="mt-1 small text-muted"></div>
+                            <div class="d-none d-xl-block pl-2">
+                                <div>{{.LoggedName}}</div>
+                                <div class="mt-1 small text-muted"></div>
+                            </div>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right dropdown-menu-arrow">
+                            <a href="#" class="dropdown-item">个人信息</a>
+                        </div>
                     </div>
-                </a>
-                <div class="dropdown-menu dropdown-menu-right dropdown-menu-arrow">
-                    <a href="#" class="dropdown-item">个人信息</a>
+                </div>
+                <div class="collapse navbar-collapse" id="navbar-menu">
+
                 </div>
             </div>
-        </div>
-        <div class="collapse navbar-collapse" id="navbar-menu">
-
-        </div>
+        </header>
     </div>
-</header>
-<div class="page">
+

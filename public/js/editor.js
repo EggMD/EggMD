@@ -30,7 +30,8 @@
             connecting: $('#connectingBadge'),
             online: $('#onlineBadge'),
             disconnected: $('#disconnectedBadge'),
-        }
+        },
+        markdown: $('#markdown')
     };
 
     setStatus('empty')
@@ -39,6 +40,14 @@
         lineNumbers: true,
         readOnly: 'nocursor',
     });
+
+    var refresh = _.debounce(function () {
+        updateView()
+    }, 100)
+
+    App.cm.on('change', function () {
+        refresh()
+    })
 
     let url = 'ws://' + location.host + "/socket/" + shortID
     var conn = App.conn = new SocketConnection(url);

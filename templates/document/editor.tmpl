@@ -1,5 +1,13 @@
 {{template "document/header" .}}
 
-<textarea id="editor" readonly></textarea>
+<div class="row">
+    <div class="col-6">
+        <textarea id="editor" readonly></textarea>
+    </div>
+    <div class="col-6 p-3">
+        <div id="markdown" class="markdown-body"></div>
+    </div>
+</div>
+
 
 {{template "document/footer" .}}
