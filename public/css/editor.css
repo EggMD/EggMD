@@ -14,3 +14,7 @@
     overflow-y: hidden;
     overflow-x: auto;
 }
+
+.markdown-box {
+    background-color: white;
+}

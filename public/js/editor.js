@@ -37,9 +37,16 @@
     setStatus('empty')
 
     App.cm = CodeMirror.fromTextArea(document.getElementById('editor'), {
+        mode: {
+            name: 'gfm',
+            tokenTypeOverrides: {
+                emoji: "emoji"
+            }
+        },
         lineNumbers: true,
         readOnly: 'nocursor',
     });
+
 
     var refresh = _.debounce(function () {
         updateView()
