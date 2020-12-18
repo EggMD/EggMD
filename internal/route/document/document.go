@@ -15,7 +15,7 @@ func New(c *context.Context) {
 		c.Error(500, err.Error())
 		return
 	}
-	c.RedirectSubpath("/" + newDoc.ShortID)
+	c.RedirectSubpath("/" + newDoc.UID)
 }
 
 func Editor(c *context.Context) {

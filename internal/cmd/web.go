@@ -79,11 +79,11 @@ func runWeb(c *cli.Context) error {
 			m.Post("/new", document.New)
 		}, reqSignIn)
 
-		m.Group("/:shortid", func() {
+		m.Group("/:uid", func() {
 			m.Get("/", document.Editor)
 		}, context.DocumentAssignment(), reqSignIn)
 
-		m.Get("/socket/:shortid", sockets.JSON(socket.EventMessage{}), socket.Handler, reqSignIn)
+		m.Get("/socket/:uid", sockets.JSON(socket.EventMessage{}), socket.Handler, reqSignIn)
 	},
 
 		session.Sessioner(session.Options{

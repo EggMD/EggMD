@@ -9,6 +9,7 @@ require (
 	github.com/go-macaron/session v1.0.2
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/pkg/errors v0.9.1
+	github.com/satori/go.uuid v1.2.0
 	github.com/unknwon/com v1.0.1
 	github.com/urfave/cli v1.22.5
 	github.com/wuhan005/macaron-sockets v0.3.0

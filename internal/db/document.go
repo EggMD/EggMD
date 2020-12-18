@@ -8,6 +8,7 @@ import (
 type Document struct {
 	gorm.Model
 	Title      string `gorm:"NOT NULL"`
+	UID        string `gorm:"UNIQUE"`
 	ShortID    string `gorm:"UNIQUE"`
 	OwnerID    uint   `gorm:"NOT NULL"`
 	Content    string
