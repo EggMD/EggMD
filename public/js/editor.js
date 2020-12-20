@@ -95,3 +95,9 @@
         console.log(data);
     });
 }());
+
+function updateView() {
+    let value = App.cm.getValue()
+    let rendered = md.render(value)
+    App.markdown.html(filterXSS(rendered, filterXSSOptions))
+}

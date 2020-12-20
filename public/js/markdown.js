@@ -73,9 +73,7 @@ var filterXSSOptions = {
     }
 }
 
-function updateView() {
-    let value = App.cm.getValue()
+function renderView() {
     let rendered = md.render(value)
-    App.markdown.html(filterXSS(rendered, filterXSSOptions))
+    $('#markdown').html(filterXSS(rendered, filterXSSOptions))
 }
-

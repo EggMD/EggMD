@@ -19,6 +19,8 @@ type DocumentsStore interface {
 	GetDocByUID(uid string) (*Document, error)
 	// UpdateByUID updates a document with the given uid.
 	UpdateByUID(uid string, opts UpdateDocOptions) error
+	// GetDocByShortID returns a document with the given shortID.
+	GetDocByShortID(shortID string) (*Document, error)
 	// GetUserDocuments returns a user's document list.
 	GetUserDocuments(opts *UserDocOptions) (DocumentList, error)
 }
@@ -121,6 +123,18 @@ func (docs DocumentList) loadAttributes(db *gorm.DB) error {
 	}
 
 	return nil
+}
+
+func (db *documents) GetDocByShortID(shortID string) (*Document, error) {
+	d := new(Document)
+	err := db.Model(&Document{}).Where("short_id = ?", shortID).First(d).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, ErrDocumentNotFound
+		}
+		return nil, err
+	}
+	return d, nil
 }
 
 func (db *documents) GetUserDocuments(opts *UserDocOptions) (DocumentList, error) {

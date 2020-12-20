@@ -1,9 +1,14 @@
 package mdutil
 
 import (
+	"bytes"
+
+	"github.com/microcosm-cc/bluemonday"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
+	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"
+	"github.com/yuin/goldmark/renderer/html"
 	"github.com/yuin/goldmark/text"
 )
 
@@ -33,4 +38,24 @@ func ParseTitle(content string) string {
 	}
 
 	return UNTITLED
+}
+
+// RenderMarkdown renders the input markdown string.
+func RenderMarkdown(rawMarkdown string) (string, error) {
+	md := goldmark.New(
+		goldmark.WithExtensions(extension.GFM),
+		goldmark.WithParserOptions(
+			parser.WithAutoHeadingID(),
+		),
+		goldmark.WithRendererOptions(
+			html.WithHardWraps(),
+			html.WithUnsafe(),
+		),
+	)
+	var buf bytes.Buffer
+	if err := md.Convert([]byte(rawMarkdown), &buf); err != nil {
+		return "", err
+	}
+
+	return bluemonday.UGCPolicy().Sanitize(buf.String()), nil
 }
