@@ -8,6 +8,7 @@ require (
 	github.com/go-macaron/csrf v0.0.0-20200329073418-5d38f39de352
 	github.com/go-macaron/session v1.0.2
 	github.com/gorilla/websocket v1.4.2 // indirect
+	github.com/microcosm-cc/bluemonday v1.0.4
 	github.com/pkg/errors v0.9.1
 	github.com/satori/go.uuid v1.2.0
 	github.com/unknwon/com v1.0.1

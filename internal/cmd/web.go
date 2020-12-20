@@ -81,7 +81,12 @@ func runWeb(c *cli.Context) error {
 
 		m.Group("/:uid", func() {
 			m.Get("/", document.Editor)
-		}, context.DocumentAssignment(), reqSignIn)
+		}, context.DocumentUIDAssignment(), reqSignIn)
+
+		// TODO permission
+		m.Group("/s/:shortID", func() {
+			m.Get("/", document.Share)
+		}, context.DocumentShortIDAssignment())
 
 		m.Get("/socket/:uid", sockets.JSON(socket.EventMessage{}), socket.Handler, reqSignIn)
 	},

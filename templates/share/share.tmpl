@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+    <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
+    <meta name="author" content=""/>
+    <meta name="description" content=""/>
+    <meta name="keywords" content="">
+    <meta name="referrer" content="no-referrer"/>
+
+    <link rel="shortcut icon" href="{{AppSubURL}}/img/favicon.png"/>
+
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="{{AppSubURL}}/css/markdown.css"/>
+    <link rel="stylesheet" href="{{AppSubURL}}/css/tabler.min.css">
+    <link rel="stylesheet" href="{{AppSubURL}}/css/tabler-vendors.min.css"/>
+
+    <!-- JavaScript -->
+    <script src="{{AppSubURL}}/js/tabler.min.js"></script>
+    <script src="{{AppSubURL}}/js/libs/bootstrap.bundle.min.js"></script>
+
+    <title>{{if .Title}}{{.Title}} - {{end}}EggMD</title>
+
+</head>
+<body class="antialiased">
+<div class="page">
+    <div class="content">
+        <div class="container">
+            <div class="row">
+                <div id="markdown" class="markdown-body">
+                    {{.RawHTML | Safe}}
+                </div>
+            </div>
+            <div class="hr-text hr-text-right">
+                <img src="/assets/eggmd.svg" width="42" height="40" alt="EggMD" class="navbar-brand-image mr-2">
+                EggMD
+            </div>
+            <p class="text-muted text-right">
+                Self-hosted collaborative documents service
+            </p>
+        </div>
+    </div>
+</div>
+</body>
+</html>
