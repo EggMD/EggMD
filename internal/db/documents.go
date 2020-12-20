@@ -23,6 +23,8 @@ type DocumentsStore interface {
 	GetDocByShortID(shortID string) (*Document, error)
 	// GetUserDocuments returns a user's document list.
 	GetUserDocuments(opts *UserDocOptions) (DocumentList, error)
+	// SetPermission sets a document's permission.
+	SetPermission(uid string, permission string) error
 }
 
 var Documents DocumentsStore
@@ -46,7 +48,7 @@ func (db *documents) Create(ownerID uint) (*Document, error) {
 		OwnerID:            ownerID,
 		Content:            "",
 		LastModifiedUserID: ownerID,
-		Permission:         0,
+		Permission:         LIMITED,
 	}
 	err = db.Model(&Document{}).Create(d).Error
 	return d, err
@@ -143,7 +145,7 @@ func (db *documents) GetUserDocuments(opts *UserDocOptions) (DocumentList, error
 	}
 
 	docs := make(DocumentList, 0, opts.PageSize)
-	err := db.Debug().Model(&Document{}).Where("owner_id = ?", opts.UserID).
+	err := db.Model(&Document{}).Where("owner_id = ?", opts.UserID).
 		Offset((opts.Page - 1) * opts.PageSize).Limit(opts.PageSize).
 		Order("`updated_at` DESC").Find(&docs).Error
 	if err != nil {
@@ -155,6 +157,10 @@ func (db *documents) GetUserDocuments(opts *UserDocOptions) (DocumentList, error
 	}
 
 	return docs, err
+}
+
+func (db *documents) SetPermission(uid string, permission string) error {
+	return db.Model(&Document{}).Where("uid = ?", uid).Update("permission", permission).Error
 }
 
 // GetShortID returns a random user salt token.
