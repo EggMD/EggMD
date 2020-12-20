@@ -7,8 +7,8 @@ import (
 
 func DocumentAssignment() macaron.Handler {
 	return func(c *Context) {
-		shortID := c.Params(":shortid")
-		doc, err := db.Documents.GetDocByShortID(shortID)
+		uid := c.Params(":uid")
+		doc, err := db.Documents.GetDocByUID(uid)
 		if err != nil {
 			c.Success("404")
 			return

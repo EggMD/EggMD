@@ -9,16 +9,16 @@ import (
 )
 
 func Handler(ctx *context.Context, receiver <-chan *EventMessage, sender chan<- *EventMessage, done <-chan bool, disconnect chan<- int, errorChannel <-chan error) (int, string) {
-	shortID := ctx.Params("shortid")
-	doc, err := db.Documents.GetDocByShortID(shortID)
+	uid := ctx.Params("uid")
+	doc, err := db.Documents.GetDocByUID(uid)
 	if err != nil {
 		return 404, "document not found"
 	}
 
 	stream := getStream()
-	docSession, err := stream.getDocument(shortID)
+	docSession, err := stream.getDocument(uid)
 	if err != nil {
-		docSession = stream.newDocument(shortID, doc.Content)
+		docSession = stream.newDocument(uid, doc.Content)
 	}
 
 	client := &Client{

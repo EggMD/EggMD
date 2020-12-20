@@ -3,6 +3,7 @@ package db
 import (
 	"github.com/EggMD/EggMD/internal/strutil"
 	"github.com/pkg/errors"
+	"github.com/satori/go.uuid"
 	"gorm.io/gorm"
 )
 
@@ -14,10 +15,10 @@ var (
 type DocumentsStore interface {
 	// Create creates a new document belongs to one user with the given ownerID.
 	Create(ownerID uint) (*Document, error)
-	// GetDocByShortID returns a document with the given shortID.
-	GetDocByShortID(shortID string) (*Document, error)
-	// UpdateByShortID updates a document with the given shortID.
-	UpdateByShortID(shortID string, opts UpdateDocOptions) error
+	// GetDocByUID returns a document with the given uid.
+	GetDocByUID(uid string) (*Document, error)
+	// UpdateByUID updates a document with the given uid.
+	UpdateByUID(uid string, opts UpdateDocOptions) error
 	// GetUserDocuments returns a user's document list.
 	GetUserDocuments(opts *UserDocOptions) (DocumentList, error)
 }
@@ -38,6 +39,7 @@ func (db *documents) Create(ownerID uint) (*Document, error) {
 
 	d := &Document{
 		Title:              "",
+		UID:                uuid.NewV4().String(),
 		ShortID:            shortID,
 		OwnerID:            ownerID,
 		Content:            "",
@@ -48,9 +50,9 @@ func (db *documents) Create(ownerID uint) (*Document, error) {
 	return d, err
 }
 
-func (db *documents) GetDocByShortID(shortID string) (*Document, error) {
+func (db *documents) GetDocByUID(uid string) (*Document, error) {
 	d := new(Document)
-	err := db.Model(&Document{}).Where("short_id = ?", shortID).First(d).Error
+	err := db.Model(&Document{}).Where("uid = ?", uid).First(d).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, ErrDocumentNotFound
@@ -66,9 +68,9 @@ type UpdateDocOptions struct {
 	LastModifiedUserID uint
 }
 
-func (db *documents) UpdateByShortID(shortID string, opts UpdateDocOptions) error {
+func (db *documents) UpdateByUID(uid string, opts UpdateDocOptions) error {
 	tx := db.Begin()
-	sess := tx.Model(&Document{}).Where("short_id = ?", shortID).Updates(map[string]interface{}{
+	sess := tx.Model(&Document{}).Where("uid = ?", uid).Updates(map[string]interface{}{
 		"title":                 opts.Title,
 		"content":               opts.Content,
 		"last_modified_user_id": opts.LastModifiedUserID,
@@ -143,5 +145,5 @@ func (db *documents) GetUserDocuments(opts *UserDocOptions) (DocumentList, error
 
 // GetShortID returns a random user salt token.
 func GetShortID() (string, error) {
-	return strutil.RandomChars(20)
+	return strutil.RandomChars(9)
 }

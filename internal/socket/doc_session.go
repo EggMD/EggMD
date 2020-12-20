@@ -21,7 +21,7 @@ type DocSession struct {
 	sync.Mutex
 
 	// Document data
-	ShortID string
+	UID     string
 	Content string
 
 	Clients []*Client // The connection clients
@@ -32,9 +32,9 @@ type DocSession struct {
 	Done               chan struct{}
 }
 
-func NewDocSession(shortID string, content string) *DocSession {
+func NewDocSession(uid string, content string) *DocSession {
 	return &DocSession{
-		ShortID: shortID,
+		UID:     uid,
 		Content: content,
 
 		Mutex:     sync.Mutex{},
@@ -53,7 +53,7 @@ func (d *DocSession) AutoSaveRoutine() {
 			d.Save()
 		case <-d.Done:
 			close(d.Done)
-			log.Trace("Stop auto save routine: %v", d.ShortID)
+			log.Trace("Stop auto save routine: %v", d.UID)
 			return
 		}
 	}
@@ -85,7 +85,7 @@ func (d *DocSession) removeClient(client *Client) {
 	if len(d.Clients) == 0 {
 		d.Done <- struct{}{}
 		d.Save()
-		stream.removeDocument(d.ShortID)
+		stream.removeDocument(d.UID)
 	}
 
 	d.SendClients()
@@ -148,13 +148,13 @@ func (d *DocSession) AddOperation(revision int, op *operation.Operation) (*opera
 }
 
 func (d *DocSession) Save() {
-	log.Trace("Save document: %v", d.ShortID)
+	log.Trace("Save document: %v", d.UID)
 	opt := db.UpdateDocOptions{
 		Title:              mdutil.ParseTitle(d.Content),
 		Content:            d.Content,
 		LastModifiedUserID: d.LastModifiedUserID,
 	}
-	_ = db.Documents.UpdateByShortID(d.ShortID, opt)
+	_ = db.Documents.UpdateByUID(d.UID, opt)
 }
 
 func (d *DocSession) SendClients() {

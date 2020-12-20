@@ -56,7 +56,7 @@
         refresh()
     })
 
-    let url = 'ws://' + location.host + "/socket/" + shortID
+    let url = 'ws://' + location.host + "/socket/" + uid
     var conn = App.conn = new SocketConnection(url);
 
     conn.on('open', function () {

@@ -12,7 +12,7 @@ var stream *Stream
 type Stream struct {
 	sync.RWMutex
 
-	// key: Document shortID
+	// key: Document UID
 	documents map[string]*DocSession
 }
 
@@ -26,29 +26,29 @@ func getStream() *Stream {
 	return stream
 }
 
-func (s *Stream) newDocument(shortID, content string) *DocSession {
+func (s *Stream) newDocument(uid, content string) *DocSession {
 	s.Lock()
 	defer s.Unlock()
-	doc := NewDocSession(shortID, content)
-	s.documents[shortID] = doc
+	doc := NewDocSession(uid, content)
+	s.documents[uid] = doc
 
 	go doc.AutoSaveRoutine()
 
 	return doc
 }
 
-func (s *Stream) getDocument(shortID string) (*DocSession, error) {
+func (s *Stream) getDocument(uid string) (*DocSession, error) {
 	s.Lock()
 	defer s.Unlock()
-	doc, ok := s.documents[shortID]
+	doc, ok := s.documents[uid]
 	if !ok {
 		return nil, errors.New("document session not found")
 	}
 	return doc, nil
 }
 
-func (s *Stream) removeDocument(shortID string) {
+func (s *Stream) removeDocument(uid string) {
 	s.Lock()
 	defer s.Unlock()
-	delete(s.documents, shortID)
+	delete(s.documents, uid)
 }
