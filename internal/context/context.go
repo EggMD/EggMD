@@ -26,7 +26,13 @@ type Context struct {
 	User     *db.User
 	IsLogged bool
 
-	Doc *db.Document
+	Doc        *db.Document
+	Permission *Permission
+}
+
+type Permission struct {
+	View bool
+	Edit bool
 }
 
 // Title sets the "Title" field in template data.
@@ -87,11 +93,12 @@ func (c *Context) RedirectSubpath(location string, status ...int) {
 func Contexter() macaron.Handler {
 	return func(ctx *macaron.Context, sess session.Store, f *session.Flash, x csrf.CSRF) {
 		c := &Context{
-			Context: ctx,
-			csrf:    x,
-			Flash:   f,
-			Session: sess,
-			Link:    conf.Server.Subpath + strings.TrimSuffix(ctx.Req.URL.Path, "/"),
+			Context:    ctx,
+			csrf:       x,
+			Flash:      f,
+			Session:    sess,
+			Link:       conf.Server.Subpath + strings.TrimSuffix(ctx.Req.URL.Path, "/"),
+			Permission: new(Permission),
 		}
 		c.Data["Link"] = template.EscapePound(c.Link)
 		c.Data["PageStartTime"] = time.Now()

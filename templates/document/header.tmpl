@@ -21,17 +21,25 @@
     <link rel="stylesheet" href="{{AppSubURL}}/css/tabler-vendors.min.css"/>
     <link media="all" rel="stylesheet" href="{{AppSubURL}}/css/codemirror.css">
     <link rel="stylesheet" href="{{AppSubURL}}/css/editor.css"/>
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+    </style>
 
     <!-- JavaScript -->
     <script src="{{AppSubURL}}/js/tabler.min.js"></script>
-    <script src="{{AppSubURL}}/js/libs/bootstrap.bundle.min.js"></script>
+    <script src="{{AppSubURL}}/js/bootstrap.bundle.min.js"></script>
 
     <title>{{if .Title}}{{.Title}} - {{end}}EggMD</title>
 
 </head>
 <body class="antialiased">
-<div class="page">
+<div id="app" class="page">
     <div class="sticky-top">
+        <div v-if="loading" class="progress progress-sm">
+            <div class="progress-bar progress-bar-indeterminate"></div>
+        </div>
         <header class="navbar navbar-expand-md navbar-light d-print-none">
             <div class="container-fluid">
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu">
@@ -41,7 +49,21 @@
                     <img src="/assets/eggmd.svg" width="42" height="40" alt="EggMD" class="navbar-brand-image">
                     EggMD
                 </a>
-                <div class="navbar-nav flex-row order-md-last">
+                <div v-cloak class="navbar-nav flex-row order-md-last">
+                    <div class="nav-item dropdown mr-3">
+                        <a class="btn" data-toggle="dropdown">
+                            ${['Freely', 'Editable', 'Limited', 'Locked', 'Protected', 'Private'][permission]}
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right dropdown-menu-arrow">
+                            <button class="dropdown-item" @click="setPermission(0)">Freely</button>
+                            <button class="dropdown-item" @click="setPermission(1)">Editable</button>
+                            <button class="dropdown-item" @click="setPermission(2)">Limited</button>
+                            <button class="dropdown-item" @click="setPermission(3)">Locked</button>
+                            <button class="dropdown-item" @click="setPermission(4)">Protected</button>
+                            <button class="dropdown-item" @click="setPermission(5)">Private</button>
+                        </div>
+                    </div>
+
                     <div class="nav-item mr-3">
                         <a href="{{AppSubURL}}/s/{{.Doc.ShortID}}" target="_blank" class="btn">
                             <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24"
@@ -55,18 +77,35 @@
                             分享
                         </a>
                     </div>
+
                     <div class="nav-item mr-3">
-                        <span id="connectingBadge" class="badge bg-yellow-lt" style="display: none;">CONNECTING</span>
-                        <span id="onlineBadge" class="badge bg-blue-lt" style="display: none;"></span>
-                        <span id="disconnectedBadge" class="badge bg-red-lt" style="display: none;">DISCONNECTED</span>
+                        <div class="avatar-list avatar-list-stacked">
+                            <span
+                                    type="button"
+                                    v-for="(client, index) in this.clients.slice(0, 5)" v-bind:key="index"
+                                    class="avatar avatar-sm avatar-rounded"
+                                    :style="`background-image: url(${client.Avatar})`"
+                            >
+                                <span v-if="client.Avatar === ''">${client.Name.substr(0, 2)}</span>
+                            </span>
+                            <span class="avatar" v-if="this.clients.length > 5">${this.clients.length - 5}</span>
+                        </div>
                     </div>
+
+                    <div class="nav-item mr-3">
+                        <span v-if="status == 'connecting'" class="badge bg-yellow-lt">CONNECTING</span>
+                        <span v-if="status == 'online'" class="badge bg-blue-lt">ONLINE</span>
+                        <span v-if="status == 'disconnected'" class="badge bg-red-lt">DISCONNECTED</span>
+                    </div>
+
                     <div class="nav-item dropdown">
                         <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-toggle="dropdown">
                             <span class="avatar avatar-sm"
                                   style="background-image: url({{ .LoggedUser.Email | AvatarLink }})"></span>
                             <div class="d-none d-xl-block pl-2">
                                 <div>{{.LoggedName}}</div>
-                                <div class="mt-1 small text-muted"></div>
+                                <div class="mt-1 small text-muted">
+                                </div>
                             </div>
                         </a>
                         <div class="dropdown-menu dropdown-menu-right dropdown-menu-arrow">

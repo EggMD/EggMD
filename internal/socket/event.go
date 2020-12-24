@@ -1,6 +1,7 @@
 package socket
 
 import (
+	"github.com/EggMD/EggMD/internal/db"
 	"github.com/EggMD/EggMD/internal/ot/operation"
 	"github.com/EggMD/EggMD/internal/ot/selection"
 )
@@ -18,6 +19,17 @@ func handleEvent(doc *DocSession, client *Client, evt *EventMessage) {
 			"client_id": client.ID,
 			"username":  client.Name,
 		}})
+
+	case "permission":
+		permission, ok := evt.Data.(float64)
+		if !ok {
+			return
+		}
+		err := db.Documents.SetPermission(doc.UID, uint(permission))
+		if err != nil {
+			return
+		}
+		doc.Broadcast(&EventMessage{"permission", permission})
 
 	case "op":
 		// data: [revision, ops, selection?]
@@ -82,6 +94,6 @@ func handleEvent(doc *DocSession, client *Client, evt *EventMessage) {
 		doc.SetSelection(client, sel)
 		doc.BroadcastExcept(client, &EventMessage{"sel", []interface{}{client.ID, sel.Marshal()}})
 	}
-	
+
 	doc.LastModifiedUserID = client.ID
 }

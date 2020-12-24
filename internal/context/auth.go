@@ -59,6 +59,43 @@ func Toggle(options *ToggleOptions) macaron.Handler {
 	}
 }
 
+func DocToggle() macaron.Handler {
+	return func(c *Context) {
+		switch c.Doc.Permission {
+		case db.FREELY: // Anyone can view & edit
+			c.Permission.View = true
+			c.Permission.Edit = true
+		case db.EDITABLE: // Anyone can view, Signed-in people can edit
+			c.Permission.View = true
+			c.Permission.View = c.IsLogged
+		case db.LIMITED: // Signed-in people can view & edit
+			if !c.IsLogged {
+				c.RedirectSubpath("/")
+				return
+			}
+			c.Permission.View = c.IsLogged
+			c.Permission.View = c.IsLogged
+		case db.LOCKED: // Anyone can view, Only owner can edit
+			c.Permission.View = true
+			c.Permission.View = c.IsLogged && c.User.ID == c.Doc.OwnerID
+		case db.PROTECTED: // Signed-in people can view, Only owner can edit
+			if !c.IsLogged {
+				c.RedirectSubpath("/")
+				return
+			}
+			c.Permission.View = c.IsLogged
+			c.Permission.View = c.IsLogged && c.User.ID == c.Doc.OwnerID
+		case db.PRIVATE: // Only owner can view & edit
+			if !c.IsLogged || c.User.ID != c.Doc.OwnerID {
+				c.RedirectSubpath("/")
+				return
+			}
+			c.Permission.View = c.IsLogged && c.User.ID == c.Doc.OwnerID
+			c.Permission.View = c.IsLogged && c.User.ID == c.Doc.OwnerID
+		}
+	}
+}
+
 // authenticatedUser returns the user object of the authenticated user.
 func authenticatedUser(sess session.Store) *db.User {
 	uid := sess.Get("uid")

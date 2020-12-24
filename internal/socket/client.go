@@ -6,6 +6,7 @@ type Client struct {
 	// Client user data
 	ID        uint
 	Name      string
+	Avatar    string
 	Selection selection.Selection `json:"selection"`
 
 	in         <-chan *EventMessage

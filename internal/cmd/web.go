@@ -55,7 +55,6 @@ func runWeb(c *cli.Context) error {
 
 	reqSignIn := context.Toggle(&context.ToggleOptions{SignInRequired: true})
 	reqSignOut := context.Toggle(&context.ToggleOptions{SignOutRequired: true})
-	//bindIgnErr := binding.BindIgnErr
 
 	m.Group("", func() {
 		m.Get("/", route.Home)
@@ -81,14 +80,13 @@ func runWeb(c *cli.Context) error {
 
 		m.Group("/:uid", func() {
 			m.Get("/", document.Editor)
-		}, context.DocumentUIDAssignment(), reqSignIn)
+		}, context.DocumentUIDAssignment(), context.DocToggle())
 
-		// TODO permission
 		m.Group("/s/:shortID", func() {
 			m.Get("/", document.Share)
-		}, context.DocumentShortIDAssignment())
+		}, context.DocumentShortIDAssignment(), context.DocToggle())
 
-		m.Get("/socket/:uid", sockets.JSON(socket.EventMessage{}), socket.Handler, reqSignIn)
+		m.Get("/socket/:uid", sockets.JSON(socket.EventMessage{}), socket.Handler, context.DocToggle())
 	},
 
 		session.Sessioner(session.Options{
