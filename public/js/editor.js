@@ -1,103 +1,86 @@
-(function () {
-    'use strict';
+new Vue({
+    el: "#app",
+    delimiters: ['${', '}'],
+    data() {
+        return {
+            loading: true,
+            uid: '33c2122f-9cf4-43af-8567-070a86b52d1c',
+            url: 'ws://' + location.host + "/socket/" + uid,
+            status: 'connecting',
+            permission: 0,
+            clients: [],
 
-    function setStatus(status) {
-        App.statusBadge.connecting.hide();
-        App.statusBadge.online.hide();
-        App.statusBadge.disconnected.hide();
-
-        switch (status) {
-            case 'online':
-                App.statusBadge.online.show();
-                return;
-            case 'connecting':
-                App.statusBadge.connecting.show();
-                return;
-            case 'disconnected':
-                App.statusBadge.disconnected.show();
-                return;
+            conn: null,
+            cm: null,
+            client: null,
         }
-    }
+    },
+    mounted() {
+        this.cm = CodeMirror.fromTextArea(document.getElementById('editor'), {
+            mode: {
+                name: 'gfm',
+                tokenTypeOverrides: {
+                    emoji: "emoji"
+                }
+            },
+            lineNumbers: true,
+            readOnly: 'nocursor',
+        });
 
-    function setClientCount(count) {
-        App.statusBadge.online.text(count.toString() + ' ONLINE');
-    }
+        this.initConnection()
+        this.loading = false
+    },
+    methods: {
+        initConnection() {
+            this.conn = new SocketConnection(this.url);
+            this.conn.on('open', () => {
+                this.setStatus('connecting')
+                this.conn.send('join', {});
+            });
 
-    window.App = {
-        conn: null,
-        cm: null,
-        statusBadge: {
-            connecting: $('#connectingBadge'),
-            online: $('#onlineBadge'),
-            disconnected: $('#disconnectedBadge'),
+            this.conn.on('close', (evt) => {
+                this.setStatus('disconnected')
+                console.log("closed")
+            });
+
+            this.conn.on('doc', (data) => {
+                this.cm.setValue(data.document);
+                let serverAdapter = new ot.SocketConnectionAdapter(this.conn);
+                let editorAdapter = new ot.CodeMirrorAdapter(this.cm);
+                this.client = new ot.EditorClient(data.revision, data.clients, serverAdapter, editorAdapter);
+
+                this.setStatus('online')
+                this.clients = data.clients
+                this.permission = data.permission
+            });
+
+            this.conn.on('clients', (data) => {
+                this.clients = data;
+            });
+
+            this.conn.on('permission', (data) => {
+                this.permission = data;
+            });
+
+            this.conn.on('registered', (clientId) => {
+                this.cm.setOption('readOnly', false);
+            });
+
+            this.conn.on('join', (data) => {
+                console.log(data);
+            });
+
+            this.conn.on('quit', (data) => {
+                console.log(data);
+            });
         },
-        markdown: $('#markdown')
-    };
 
-    setStatus('empty')
-
-    App.cm = CodeMirror.fromTextArea(document.getElementById('editor'), {
-        mode: {
-            name: 'gfm',
-            tokenTypeOverrides: {
-                emoji: "emoji"
-            }
+        setPermission(permission) {
+            this.conn.send('permission', permission)
         },
-        lineNumbers: true,
-        readOnly: 'nocursor',
-    });
 
-
-    var refresh = _.debounce(function () {
-        updateView()
-    }, 100)
-
-    App.cm.on('change', function () {
-        refresh()
-    })
-
-    let url = 'ws://' + location.host + "/socket/" + uid
-    var conn = App.conn = new SocketConnection(url);
-
-    conn.on('open', function () {
-        setStatus('connecting')
-        App.conn.send('join', {});
-    });
-
-    conn.on('close', function (evt) {
-        setStatus('disconnected')
-        console.log("closed")
-    });
-
-    conn.on('doc', function (data) {
-        App.cm.setValue(data.document);
-        var serverAdapter = new ot.SocketConnectionAdapter(conn);
-        var editorAdapter = new ot.CodeMirrorAdapter(App.cm);
-        App.client = new ot.EditorClient(data.revision, data.clients, serverAdapter, editorAdapter);
-
-        setStatus('online')
-        setClientCount(data.clients.length);
-    });
-
-    conn.on('clients', function (data) {
-        setClientCount(data.length);
-    });
-
-    conn.on('registered', function (clientId) {
-        App.cm.setOption('readOnly', false);
-    });
-
-    conn.on('join', function (data) {
-        console.log(data);
-    });
-
-    conn.on('quit', function (data) {
-        console.log(data);
-    });
-}());
-
-function updateView() {
-    let value = App.cm.getValue()
-    let rendered = md.render(value)
-    App.markdown.html(filterXSS(rendered, filterXSSOptions))
-}
+        setStatus(status) {
+            this.status = status
+        },
+    }
+})

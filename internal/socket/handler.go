@@ -5,6 +5,7 @@ import (
 
 	"github.com/EggMD/EggMD/internal/context"
 	"github.com/EggMD/EggMD/internal/db"
+	"github.com/EggMD/EggMD/internal/tool"
 	log "unknwon.dev/clog/v2"
 )
 
@@ -22,8 +23,9 @@ func Handler(ctx *context.Context, receiver <-chan *EventMessage, sender chan<- 
 	}
 
 	client := &Client{
-		ID:   ctx.User.ID,
-		Name: ctx.User.Name,
+		ID:     ctx.User.ID,
+		Name:   ctx.User.Name,
+		Avatar: tool.AvatarLink(ctx.User.AvatarEmail),
 
 		in:         receiver,
 		out:        sender,
@@ -36,9 +38,10 @@ func Handler(ctx *context.Context, receiver <-chan *EventMessage, sender chan<- 
 	// Send document content, revision, connected clients.
 	sender <- &EventMessage{
 		"doc", map[string]interface{}{
-			"document": docSession.Content,
-			"revision": len(docSession.Operations),
-			"clients":  docSession.Clients,
+			"document":   docSession.Content,
+			"revision":   len(docSession.Operations),
+			"clients":    docSession.Clients,
+			"permission": doc.Permission,
 		},
 	}
 

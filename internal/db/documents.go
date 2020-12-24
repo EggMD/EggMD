@@ -24,7 +24,7 @@ type DocumentsStore interface {
 	// GetUserDocuments returns a user's document list.
 	GetUserDocuments(opts *UserDocOptions) (DocumentList, error)
 	// SetPermission sets a document's permission.
-	SetPermission(uid string, permission string) error
+	SetPermission(uid string, permission uint) error
 }
 
 var Documents DocumentsStore
@@ -48,7 +48,7 @@ func (db *documents) Create(ownerID uint) (*Document, error) {
 		OwnerID:            ownerID,
 		Content:            "",
 		LastModifiedUserID: ownerID,
-		Permission:         LIMITED,
+		Permission:         0,
 	}
 	err = db.Model(&Document{}).Create(d).Error
 	return d, err
@@ -145,7 +145,7 @@ func (db *documents) GetUserDocuments(opts *UserDocOptions) (DocumentList, error
 	}
 
 	docs := make(DocumentList, 0, opts.PageSize)
-	err := db.Model(&Document{}).Where("owner_id = ?", opts.UserID).
+	err := db.Debug().Model(&Document{}).Where("owner_id = ?", opts.UserID).
 		Offset((opts.Page - 1) * opts.PageSize).Limit(opts.PageSize).
 		Order("`updated_at` DESC").Find(&docs).Error
 	if err != nil {
@@ -159,8 +159,14 @@ func (db *documents) GetUserDocuments(opts *UserDocOptions) (DocumentList, error
 	return docs, err
 }
 
-func (db *documents) SetPermission(uid string, permission string) error {
-	return db.Model(&Document{}).Where("uid = ?", uid).Update("permission", permission).Error
+func (db *documents) SetPermission(uid string, permission uint) error {
+	if permission < FREELY || permission > PRIVATE {
+		return errors.Errorf("unexpected permission type: %d", permission)
+	}
+
+	tx := db.Begin()
+	tx.Model(&Document{}).Where("uid = ?", uid).Update("permission", permission)
+	return tx.Commit().Error
 }
 
 // GetShortID returns a random user salt token.
