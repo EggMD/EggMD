@@ -54,7 +54,7 @@
                         <a class="btn" data-toggle="dropdown">
                             ${['Freely', 'Editable', 'Limited', 'Locked', 'Protected', 'Private'][permission]}
                         </a>
-                        <div class="dropdown-menu dropdown-menu-right dropdown-menu-arrow">
+                        <div v-show="ownerID === userID" class="dropdown-menu dropdown-menu-right dropdown-menu-arrow">
                             <button class="dropdown-item" @click="setPermission(0)">Freely</button>
                             <button class="dropdown-item" @click="setPermission(1)">Editable</button>
                             <button class="dropdown-item" @click="setPermission(2)">Limited</button>
@@ -82,13 +82,13 @@
                         <div class="avatar-list avatar-list-stacked">
                             <span
                                     type="button"
-                                    v-for="(client, index) in this.clients.slice(0, 5)" v-bind:key="index"
+                                    v-for="(user, index) in getUsers().slice(0, 5)" v-bind:key="index"
                                     class="avatar avatar-sm avatar-rounded"
-                                    :style="`background-image: url(${client.Avatar})`"
+                                    :style="`background-image: url(${user.avatar})`"
                             >
-                                <span v-if="client.Avatar === ''">${client.Name.substr(0, 2)}</span>
+                                <span v-if="user.Avatar === ''">${user.name.substr(0, 2)}</span>
                             </span>
-                            <span class="avatar" v-if="this.clients.length > 5">${this.clients.length - 5}</span>
+                            <span class="avatar avatar-sm avatar-rounded" v-if="getUsers().length > 5">${getUsers().length - 5}</span>
                         </div>
                     </div>
 
@@ -98,6 +98,7 @@
                         <span v-if="status == 'disconnected'" class="badge bg-red-lt">DISCONNECTED</span>
                     </div>
 
+                    {{ if .IsLogged }}
                     <div class="nav-item dropdown">
                         <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-toggle="dropdown">
                             <span class="avatar avatar-sm"
@@ -112,6 +113,15 @@
                             <a href="#" class="dropdown-item">个人信息</a>
                         </div>
                     </div>
+                    {{ else }}
+                    <div class="nav-item dropdown">
+                        <div class="d-none d-xl-block pl-2">
+                            <div>Guest</div>
+                            <div class="mt-1 small text-muted">
+                            </div>
+                        </div>
+                    </div>
+                    {{ end }}
                 </div>
                 <div class="collapse navbar-collapse" id="navbar-menu">
 

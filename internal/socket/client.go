@@ -4,9 +4,10 @@ import "github.com/EggMD/EggMD/internal/ot/selection"
 
 type Client struct {
 	// Client user data
-	ID        uint
-	Name      string
-	Avatar    string
+	ID        string              `json:"id"`
+	UserID    uint                `json:"user_id"`
+	Name      string              `json:"name"`
+	Avatar    string              `json:"avatar"`
 	Selection selection.Selection `json:"selection"`
 
 	in         <-chan *EventMessage

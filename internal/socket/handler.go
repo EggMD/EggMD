@@ -6,6 +6,7 @@ import (
 	"github.com/EggMD/EggMD/internal/context"
 	"github.com/EggMD/EggMD/internal/db"
 	"github.com/EggMD/EggMD/internal/tool"
+	"github.com/satori/go.uuid"
 	log "unknwon.dev/clog/v2"
 )
 
@@ -22,10 +23,24 @@ func Handler(ctx *context.Context, receiver <-chan *EventMessage, sender chan<- 
 		docSession = stream.newDocument(uid, doc.Content)
 	}
 
+	var userID uint
+	var name, avatar string
+
+	if ctx.IsLogged {
+		userID = ctx.User.ID
+		name = ctx.User.Name
+		avatar = tool.AvatarLink(ctx.User.Email)
+	} else {
+		userID = 0
+		name = "Guest"
+		avatar = tool.AvatarLink("")
+	}
+
 	client := &Client{
-		ID:     ctx.User.ID,
-		Name:   ctx.User.Name,
-		Avatar: tool.AvatarLink(ctx.User.AvatarEmail),
+		ID:     uuid.NewV4().String(),
+		UserID: userID,
+		Name:   name,
+		Avatar: avatar,
 
 		in:         receiver,
 		out:        sender,
@@ -41,6 +56,7 @@ func Handler(ctx *context.Context, receiver <-chan *EventMessage, sender chan<- 
 			"document":   docSession.Content,
 			"revision":   len(docSession.Operations),
 			"clients":    docSession.Clients,
+			"owner_id":   doc.OwnerID,
 			"permission": doc.Permission,
 		},
 	}

@@ -14,18 +14,28 @@ type EventMessage struct {
 func handleEvent(doc *DocSession, client *Client, evt *EventMessage) {
 	switch evt.Name {
 	case "join":
-		client.out <- &EventMessage{"registered", client.ID}
+		client.out <- &EventMessage{"registered", map[string]interface{}{
+			"client_id": client.ID,
+			"user_id":   client.ID,
+		}}
 		doc.BroadcastExcept(client, &EventMessage{"join", map[string]interface{}{
 			"client_id": client.ID,
 			"username":  client.Name,
 		}})
 
+		// Set permission
 	case "permission":
+		// Only owner can set the permission.
+		document, err := db.Documents.GetDocByUID(doc.UID)
+		if err != nil || document.OwnerID != client.UserID {
+			return
+		}
+
 		permission, ok := evt.Data.(float64)
 		if !ok {
 			return
 		}
-		err := db.Documents.SetPermission(doc.UID, uint(permission))
+		err = db.Documents.SetPermission(doc.UID, uint(permission))
 		if err != nil {
 			return
 		}
@@ -95,5 +105,5 @@ func handleEvent(doc *DocSession, client *Client, evt *EventMessage) {
 		doc.BroadcastExcept(client, &EventMessage{"sel", []interface{}{client.ID, sel.Marshal()}})
 	}
 
-	doc.LastModifiedUserID = client.ID
+	doc.LastModifiedUserID = client.UserID
 }

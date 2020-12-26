@@ -4,9 +4,11 @@ new Vue({
     data() {
         return {
             loading: true,
-            uid: '33c2122f-9cf4-43af-8567-070a86b52d1c',
+            uid: uid,
             url: 'ws://' + location.host + "/socket/" + uid,
             status: 'connecting',
+            userID: 0,
+            ownerID: null,
             permission: 0,
             clients: [],
 
@@ -62,7 +64,9 @@ new Vue({
                 this.permission = data;
             });
 
-            this.conn.on('registered', (clientId) => {
+            this.conn.on('registered', (data) => {
+                this.userID = data.user_id
+                this.ownerID = data.owner_id
                 this.cm.setOption('readOnly', false);
             });
 
@@ -73,6 +77,21 @@ new Vue({
             this.conn.on('quit', (data) => {
                 console.log(data);
             });
+        },
+
+        // Remove the repeat clients.
+        getUsers() {
+            let u = {}
+            let users = []
+
+            this.clients.forEach((client) => {
+                // Every guest are different.
+                if (u[client.user_id] === undefined || client.user_id === 0) {
+                    users.push(client)
+                    u[client.user_id] = true
+                }
+            })
+            return users
         },
 
         setPermission(permission) {
