@@ -12,6 +12,10 @@
             self.emit('open', evt);
         };
 
+        ws.onerror = function (evt) {
+            self.emit('error', evt)
+        }
+
         ws.onclose = function (evt) {
             self.emit('close', evt);
         };

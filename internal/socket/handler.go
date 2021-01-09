@@ -4,23 +4,21 @@ import (
 	"time"
 
 	"github.com/EggMD/EggMD/internal/context"
-	"github.com/EggMD/EggMD/internal/db"
 	"github.com/EggMD/EggMD/internal/tool"
 	"github.com/satori/go.uuid"
 	log "unknwon.dev/clog/v2"
 )
 
 func Handler(ctx *context.Context, receiver <-chan *EventMessage, sender chan<- *EventMessage, done <-chan bool, disconnect chan<- int, errorChannel <-chan error) (int, string) {
-	uid := ctx.Params("uid")
-	doc, err := db.Documents.GetDocByUID(uid)
-	if err != nil {
-		return 404, "document not found"
-	}
+	uid := ctx.Doc.UID
 
 	stream := getStream()
 	docSession, err := stream.getDocument(uid)
 	if err != nil {
-		docSession = stream.newDocument(uid, doc.Content)
+		docSession, err = stream.newDocument(uid)
+		if err != nil {
+			return 404, "document not found"
+		}
 	}
 
 	var userID uint
@@ -53,11 +51,11 @@ func Handler(ctx *context.Context, receiver <-chan *EventMessage, sender chan<- 
 	// Send document content, revision, connected clients.
 	sender <- &EventMessage{
 		"doc", map[string]interface{}{
-			"document":   docSession.Content,
+			"document":   docSession.Document.Content,
 			"revision":   len(docSession.Operations),
 			"clients":    docSession.Clients,
-			"owner_id":   doc.OwnerID,
-			"permission": doc.Permission,
+			"owner_id":   docSession.Document.OwnerID,
+			"permission": docSession.Document.Permission,
 		},
 	}
 

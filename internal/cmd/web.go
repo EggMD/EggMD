@@ -78,15 +78,21 @@ func runWeb(c *cli.Context) error {
 			m.Post("/new", document.New)
 		}, reqSignIn)
 
-		m.Group("/:uid", func() {
-			m.Get("/", document.Editor)
+		// Online editor
+		m.Group("", func() {
+			// Web page
+			m.Get("/:uid", document.Editor)
+
+			// Websocket connection
+			m.Get("/socket/:uid", sockets.JSON(socket.EventMessage{}), socket.Handler)
+
 		}, context.DocumentUIDAssignment(), context.DocToggle())
 
+		// Share document
 		m.Group("/s/:shortID", func() {
 			m.Get("/", document.Share)
 		}, context.DocumentShortIDAssignment(), context.DocToggle())
-
-		m.Get("/socket/:uid", sockets.JSON(socket.EventMessage{}), socket.Handler, context.DocToggle())
+		
 	},
 
 		session.Sessioner(session.Options{
