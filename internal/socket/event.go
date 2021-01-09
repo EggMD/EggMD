@@ -29,7 +29,6 @@ func respMessage(name string, data interface{}) *EventMessage {
 func handleEvent(doc *DocSession, client *Client, evt *EventMessage) {
 	var canView, canEdit bool
 	if client.UserID == doc.Document.OwnerID {
-		canView = true
 		canEdit = true
 	} else {
 		// Check permission
