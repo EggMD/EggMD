@@ -41,9 +41,11 @@ func handleEvent(doc *DocSession, client *Client, evt *EventMessage) {
 
 	switch evt.Name {
 	case "join":
+		_, edit := doc.Document.HasPermission(client.UserID)
 		client.out <- respMessage(REGISTERED, H{
 			"client_id": client.ID,
 			"user_id":   client.UserID,
+			"read_only": !edit,
 		})
 		doc.BroadcastExcept(client, respMessage(JOIN, H{
 			"client_id": client.ID,
