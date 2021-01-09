@@ -101,20 +101,25 @@ new Vue({
                             case 3:
                             case 4:
                                 canView = true
-
                         }
                     }
+                } else {
+                    canView = true
+                    canEdit = true
                 }
 
                 this.editorAdapter.canEdit = canEdit;
+                this.cm.setOption('readOnly', !canEdit);
+
                 this.permission = data;
             });
 
             this.conn.on('registered', (data) => {
-                console.log(data)
                 this.userID = data.user_id
                 this.clientID = data.client_id
-                this.cm.setOption('readOnly', false);
+
+                this.editorAdapter.canEdit = !data.read_only;
+                this.cm.setOption('readOnly', data.read_only);
             });
 
             this.conn.on('join', (data) => {
