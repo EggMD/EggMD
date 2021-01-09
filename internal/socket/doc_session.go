@@ -16,34 +16,37 @@ var (
 	ErrInvalidRevision = errors.New("ot/session: invalid revision")
 )
 
-// DocSession is a single websocket session.
+// DocSession is a document collaborative session.
 type DocSession struct {
 	sync.Mutex
 
-	// Document data
-	UID     string
-	Content string
+	Document *db.Document
 
-	Clients []*Client // The connection clients
-
-	Operations         []*operation.Operation
+	Clients            []*Client // The connection clients
 	LastModifiedUserID uint
-	EventChan          chan ConnEvent
-	Done               chan struct{}
+
+	Operations []*operation.Operation
+	EventChan  chan ConnEvent
+	Done       chan struct{}
 }
 
-func NewDocSession(uid string, content string) *DocSession {
+// NewDocSession returns a new document collaborative session of the document `uid`.
+func NewDocSession(uid string) (*DocSession, error) {
+	document, err := db.Documents.GetDocByUID(uid)
+	if err != nil {
+		return nil, err
+	}
 	return &DocSession{
-		UID:     uid,
-		Content: content,
+		Mutex:    sync.Mutex{},
+		Document: document,
 
-		Mutex:     sync.Mutex{},
 		Clients:   make([]*Client, 0),
 		EventChan: make(chan ConnEvent),
 		Done:      make(chan struct{}),
-	}
+	}, nil
 }
 
+// AutoSaveRoutine save the document into database every 5 seconds.
 func (d *DocSession) AutoSaveRoutine() {
 	tick := time.NewTicker(5 * time.Second)
 
@@ -53,20 +56,22 @@ func (d *DocSession) AutoSaveRoutine() {
 			d.Save()
 		case <-d.Done:
 			close(d.Done)
-			log.Trace("Stop auto save routine: %v", d.UID)
+			log.Trace("Stop auto save routine: %v", d.Document.UID)
 			return
 		}
 	}
 }
 
+// appendClient add a new client connection.
 func (d *DocSession) appendClient(client *Client) {
 	d.Lock()
 	defer d.Unlock()
 
 	d.Clients = append(d.Clients, client)
-	d.SendClients()
+	d.BroadcastClientsInfo()
 }
 
+// removeClient remove the client connection.
 func (d *DocSession) removeClient(client *Client) {
 	d.Lock()
 	defer d.Unlock()
@@ -85,10 +90,10 @@ func (d *DocSession) removeClient(client *Client) {
 	if len(d.Clients) == 0 {
 		d.Done <- struct{}{}
 		d.Save()
-		stream.removeDocument(d.UID)
+		stream.removeDocument(d.Document.UID)
 	}
 
-	d.SendClients()
+	d.BroadcastClientsInfo()
 }
 
 func (d *DocSession) BroadcastExcept(client *Client, msg *EventMessage) {
@@ -134,32 +139,29 @@ func (d *DocSession) AddOperation(revision int, op *operation.Operation) (*opera
 	}
 
 	// Apply transformed op on the doc.
-	doc, err := op.Apply(d.Content)
+	doc, err := op.Apply(d.Document.Content)
 	if err != nil {
 		return nil, err
 	}
 
 	d.Lock()
 	defer d.Unlock()
-	d.Content = doc
+	d.Document.Content = doc
 	d.Operations = append(d.Operations, op)
 
 	return op, nil
 }
 
 func (d *DocSession) Save() {
-	log.Trace("Save document: %v", d.UID)
+	log.Trace("Save document: %v", d.Document.UID)
 	opt := db.UpdateDocOptions{
-		Title:              mdutil.ParseTitle(d.Content),
-		Content:            d.Content,
+		Title:              mdutil.ParseTitle(d.Document.Content),
+		Content:            d.Document.Content,
 		LastModifiedUserID: d.LastModifiedUserID,
 	}
-	_ = db.Documents.UpdateByUID(d.UID, opt)
+	_ = db.Documents.UpdateByUID(d.Document.UID, opt)
 }
 
-func (d *DocSession) SendClients() {
-	d.Broadcast(&EventMessage{
-		Name: "clients",
-		Data: d.Clients,
-	})
+func (d *DocSession) BroadcastClientsInfo() {
+	d.Broadcast(respMessage(CLIENTS, d.Clients))
 }

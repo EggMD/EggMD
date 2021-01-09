@@ -26,15 +26,19 @@ func getStream() *Stream {
 	return stream
 }
 
-func (s *Stream) newDocument(uid, content string) *DocSession {
+func (s *Stream) newDocument(uid string) (*DocSession, error) {
 	s.Lock()
 	defer s.Unlock()
-	doc := NewDocSession(uid, content)
+	doc, err := NewDocSession(uid)
+	if err != nil {
+		return nil, err
+	}
+
 	s.documents[uid] = doc
 
 	go doc.AutoSaveRoutine()
 
-	return doc
+	return doc, nil
 }
 
 func (s *Stream) getDocument(uid string) (*DocSession, error) {

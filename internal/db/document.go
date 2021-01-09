@@ -6,6 +6,8 @@ import (
 
 const (
 	// Permission
+	// Guest View: 0 1 3 Edit: 0
+	// User View: 0 1 2 3 4 Edit: 0 1 2
 	FREELY    = iota // Anyone can view & edit
 	EDITABLE         // Anyone can view, Signed-in people can edit
 	LIMITED          // Signed-in people can view & edit
@@ -26,4 +28,29 @@ type Document struct {
 
 	LastModifiedUserID uint
 	LastModifiedUser   *User `gorm:"-"`
+}
+
+// HasPermission checks if the user has permission to do the operation.
+func (d *Document) HasPermission(userID uint) (view, edit bool) {
+	// Guest
+	if userID == 0 {
+		switch d.Permission {
+		case 0:
+			view = true
+			edit = true
+		case 1, 3:
+			view = true
+		}
+		return
+	}
+
+	// SignedIn User
+	switch d.Permission {
+	case 0, 1, 2:
+		view = true
+		edit = true
+	case 3, 4:
+		view = true
+	}
+	return
 }
