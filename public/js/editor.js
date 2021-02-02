@@ -13,6 +13,7 @@ new Vue({
             permission: 0,
             clients: [],
 
+            markdownHTML: '',
 
             closed: false,
 
@@ -34,9 +35,15 @@ new Vue({
             readOnly: 'nocursor',
         });
 
+        this.cm.on('changes', () => {
+            let rendered = md.render(this.cm.getValue());
+            this.markdownHTML = filterXSS(rendered, filterXSSOptions);
+        })
+
         this.initConnection()
         this.loading = false
     },
+
     methods: {
         initConnection() {
             this.conn = new SocketConnection(this.url);

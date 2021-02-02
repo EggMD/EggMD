@@ -72,8 +72,3 @@ var filterXSSOptions = {
         }
     }
 }
-
-function renderView() {
-    let rendered = md.render(value)
-    $('#markdown').html(filterXSS(rendered, filterXSSOptions))
-}
