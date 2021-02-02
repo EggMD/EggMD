@@ -4,12 +4,13 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pkg/errors"
+	log "unknwon.dev/clog/v2"
+
 	"github.com/EggMD/EggMD/internal/db"
 	"github.com/EggMD/EggMD/internal/mdutil"
 	"github.com/EggMD/EggMD/internal/ot/operation"
 	"github.com/EggMD/EggMD/internal/ot/selection"
-	"github.com/pkg/errors"
-	log "unknwon.dev/clog/v2"
 )
 
 var (
@@ -24,6 +25,7 @@ type DocSession struct {
 
 	Clients            []*Client // The connection clients
 	LastModifiedUserID uint
+	EditedAfterSave    bool
 
 	Operations []*operation.Operation
 	EventChan  chan ConnEvent
@@ -53,7 +55,9 @@ func (d *DocSession) AutoSaveRoutine() {
 	for {
 		select {
 		case <-tick.C:
-			d.Save()
+			if d.EditedAfterSave {
+				d.Save()
+			}
 		case <-d.Done:
 			close(d.Done)
 			log.Trace("Stop auto save routine: %v", d.Document.UID)
@@ -160,6 +164,8 @@ func (d *DocSession) Save() {
 		LastModifiedUserID: d.LastModifiedUserID,
 	}
 	_ = db.Documents.UpdateByUID(d.Document.UID, opt)
+
+	d.EditedAfterSave = false
 }
 
 func (d *DocSession) BroadcastClientsInfo() {

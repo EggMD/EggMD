@@ -82,6 +82,8 @@ func handleEvent(doc *DocSession, client *Client, evt *EventMessage) {
 			return
 		}
 
+		doc.EditedAfterSave = true
+
 		// data: [revision, ops, selection?]
 		data, ok := evt.Data.([]interface{})
 		if !ok {

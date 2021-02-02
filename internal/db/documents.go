@@ -1,10 +1,11 @@
 package db
 
 import (
-	"github.com/EggMD/EggMD/internal/strutil"
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 	"gorm.io/gorm"
+
+	"github.com/EggMD/EggMD/internal/strutil"
 )
 
 var (

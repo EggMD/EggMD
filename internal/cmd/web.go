@@ -4,6 +4,15 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/go-macaron/binding"
+	"github.com/go-macaron/csrf"
+	"github.com/go-macaron/session"
+	"github.com/urfave/cli"
+	"gopkg.in/macaron.v1"
+	log "unknwon.dev/clog/v2"
+
+	"github.com/EggMD/sockets"
+
 	"github.com/EggMD/EggMD/internal/conf"
 	"github.com/EggMD/EggMD/internal/context"
 	"github.com/EggMD/EggMD/internal/db"
@@ -13,13 +22,6 @@ import (
 	"github.com/EggMD/EggMD/internal/route/user"
 	"github.com/EggMD/EggMD/internal/socket"
 	"github.com/EggMD/EggMD/internal/template"
-	"github.com/go-macaron/binding"
-	"github.com/go-macaron/csrf"
-	"github.com/go-macaron/session"
-	"github.com/urfave/cli"
-	"github.com/wuhan005/macaron-sockets"
-	"gopkg.in/macaron.v1"
-	log "unknwon.dev/clog/v2"
 )
 
 var Web = cli.Command{
@@ -92,7 +94,6 @@ func runWeb(c *cli.Context) error {
 		m.Group("/s/:shortID", func() {
 			m.Get("/", document.Share)
 		}, context.DocumentShortIDAssignment(), context.DocToggle())
-		
 	},
 
 		session.Sessioner(session.Options{
