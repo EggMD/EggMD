@@ -4,10 +4,11 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/EggMD/EggMD/internal/cryptoutil"
-	"github.com/EggMD/EggMD/internal/strutil"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
+
+	"github.com/EggMD/EggMD/internal/cryptoutil"
+	"github.com/EggMD/EggMD/internal/strutil"
 )
 
 var (

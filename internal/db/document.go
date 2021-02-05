@@ -26,6 +26,8 @@ type Document struct {
 	Content    string
 	Permission uint `gorm:"NOT NULL"`
 
+	Users []User `gorm:"many2many:document_users;"`
+
 	LastModifiedUserID uint
 	LastModifiedUser   *User `gorm:"-"`
 }

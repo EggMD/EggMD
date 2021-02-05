@@ -3,10 +3,11 @@ package db
 import (
 	"fmt"
 
-	"github.com/EggMD/EggMD/internal/conf"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	log "unknwon.dev/clog/v2"
+
+	"github.com/EggMD/EggMD/internal/conf"
 )
 
 // Init connects to the database.

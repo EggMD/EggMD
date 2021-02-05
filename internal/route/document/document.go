@@ -1,6 +1,8 @@
 package document
 
 import (
+	log "unknwon.dev/clog/v2"
+
 	"github.com/EggMD/EggMD/internal/context"
 	"github.com/EggMD/EggMD/internal/db"
 	"github.com/EggMD/EggMD/internal/mdutil"
@@ -21,6 +23,14 @@ func New(c *context.Context) {
 }
 
 func Editor(c *context.Context) {
+	if c.IsLogged {
+		// Append editor document relation.
+		err := db.Documents.AppendEditor(c.User.ID, c.Doc.ID)
+		if err != nil {
+			log.Error("append editor error: %v", err)
+		}
+	}
+
 	c.Success(DOCUMENT_EDITOR)
 }
 
