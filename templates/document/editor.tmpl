@@ -1,10 +1,10 @@
 {{template "document/header" .}}
 
 <div v-cloak class="row">
-    <div class="col-6">
+    <div class="col" v-show="displayMode !== 'read'">
         <textarea id="editor" readonly></textarea>
     </div>
-    <div class="col-6 p-3 markdown-box">
+    <div class="col p-3 markdown-box" v-show="displayMode !== 'edit'">
         <div id="markdown" class="markdown-body" v-html="markdownHTML"></div>
     </div>
 </div>
