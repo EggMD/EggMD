@@ -5,7 +5,7 @@ new Vue({
         return {
             loading: true,
             uid: uid,
-            url: 'ws://' + location.host + "/socket/" + uid,
+            url: 'ws://' + location.host + "/e/socket/" + uid,
             status: 'connecting',
             userID: 0,
             clientID: null,
@@ -13,6 +13,7 @@ new Vue({
             permission: 0,
             clients: [],
 
+            displayMode: 'sep',
             markdownHTML: '',
 
             closed: false,
@@ -42,6 +43,7 @@ new Vue({
 
         this.initConnection()
         this.loading = false
+        this.setDisplayMode(window.location.hash.slice(6))
     },
 
     methods: {
@@ -160,5 +162,9 @@ new Vue({
         setStatus(status) {
             this.status = status
         },
+
+        setDisplayMode(mode) {
+            this.displayMode = mode
+        }
     }
 })

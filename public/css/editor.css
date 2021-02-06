@@ -1,9 +1,22 @@
+body {
+    height: 100%;
+}
+
+#app {
+    height: 100%;
+}
+
+.row {
+    height: 100%;
+    width: 100%;
+}
+
 .CodeMirror {
     font-family: "Source Code Pro", Consolas, monaco, monospace;
     letter-spacing: 0.025em;
     line-height: 1.25;
     font-size: 18px;
-    height: auto !important;
+    height: 100% !important;
     width: 100%;
     overflow-y: hidden !important;
     -webkit-overflow-scrolling: touch;

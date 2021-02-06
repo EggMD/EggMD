@@ -30,7 +30,6 @@
     <!-- JavaScript -->
     <script type="text/javascript" src="{{AppSubURL}}/js/tabler.min.js"></script>
     <script type="text/javascript" src="{{AppSubURL}}/js/bootstrap.bundle.min.js"></script>
-    <script type="text/javascript" src="{{AppSubURL}}/js/vue-codemirror.js"></script>
 
     <title>{{if .Title}}{{.Title}} - {{end}}EggMD</title>
 
@@ -38,9 +37,6 @@
 <body class="antialiased">
 <div id="app" class="page">
     <div class="sticky-top">
-        <div v-if="loading" class="progress progress-sm">
-            <div class="progress-bar progress-bar-indeterminate"></div>
-        </div>
         <header class="navbar navbar-expand-md navbar-light d-print-none">
             <div class="container-fluid">
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu">
@@ -50,6 +46,18 @@
                     <img src="/assets/eggmd.svg" width="42" height="40" alt="EggMD" class="navbar-brand-image">
                     EggMD
                 </a>
+
+                <div class="card">
+                    <ul class="nav nav-tabs" data-bs-toggle="tabs">
+                        <li class="nav-item"><a href="#mode-edit" class="nav-link"
+                                                @click="setDisplayMode('edit')">编辑</a></li>
+                        <li class="nav-item"><a href="#mode-sep" class="nav-link"
+                                                @click="setDisplayMode('sep')">分隔</a></li>
+                        <li class="nav-item"><a href="#mode-read" class="nav-link"
+                                                @click="setDisplayMode('read')">阅读</a></li>
+                    </ul>
+                </div>
+
                 <div v-cloak class="navbar-nav flex-row order-md-last">
                     <div class="nav-item dropdown mr-3">
                         <a class="btn" data-toggle="dropdown">
@@ -129,4 +137,7 @@
                 </div>
             </div>
         </header>
+        <div v-if="loading" class="progress progress-sm">
+            <div class="progress-bar progress-bar-indeterminate"></div>
+        </div>
     </div>

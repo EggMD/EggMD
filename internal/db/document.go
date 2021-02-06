@@ -22,9 +22,13 @@ type Document struct {
 	Title      string `gorm:"NOT NULL"`
 	UID        string `gorm:"UNIQUE"`
 	ShortID    string `gorm:"UNIQUE"`
-	OwnerID    uint   `gorm:"NOT NULL"`
 	Content    string
 	Permission uint `gorm:"NOT NULL"`
+
+	OwnerID uint  `gorm:"NOT NULL"`
+	Owner   *User `gorm:"ForeignKey:OwnerID"`
+
+	Users []User `gorm:"many2many:document_users;"`
 
 	LastModifiedUserID uint
 	LastModifiedUser   *User `gorm:"-"`

@@ -21,6 +21,8 @@ type User struct {
 	// Permissions
 	IsAdmin bool
 
+	Documents []Document `gorm:"many2many:document_users;"`
+
 	// Avatar
 	Avatar      string `gorm:"TYPE:VARCHAR(2048);NOT NULL"`
 	AvatarEmail string `gorm:"NOT NULL"`

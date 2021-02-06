@@ -78,10 +78,11 @@ func runWeb(c *cli.Context) error {
 
 		m.Group("/doc", func() {
 			m.Post("/new", document.New)
+			m.Post("/remove/:uid", document.Remove)
 		}, reqSignIn)
 
 		// Online editor
-		m.Group("", func() {
+		m.Group("/e", func() {
 			// Web page
 			m.Get("/:uid", document.Editor)
 

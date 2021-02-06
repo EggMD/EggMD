@@ -1,8 +1,9 @@
 package user
 
 import (
-	"github.com/EggMD/EggMD/internal/context"
 	log "unknwon.dev/clog/v2"
+
+	"github.com/EggMD/EggMD/internal/context"
 )
 
 const (

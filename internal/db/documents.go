@@ -16,6 +16,8 @@ var (
 type DocumentsStore interface {
 	// Create creates a new document belongs to one user with the given ownerID.
 	Create(ownerID uint) (*Document, error)
+	// Remove removes the document by given uid.
+	Remove(uid string) error
 	// GetDocByUID returns a document with the given uid.
 	GetDocByUID(uid string) (*Document, error)
 	// UpdateByUID updates a document with the given uid.
@@ -26,6 +28,10 @@ type DocumentsStore interface {
 	GetUserDocuments(opts *UserDocOptions) (DocumentList, error)
 	// SetPermission sets a document's permission.
 	SetPermission(uid string, permission uint) error
+	// AppendEditor creates a editor user to document relation.
+	AppendEditor(userID, documentID uint) error
+	// RemoveEditor remove the editor user relation with the given document.
+	RemoveEditor(userID, documentID uint) error
 }
 
 var Documents DocumentsStore
@@ -50,21 +56,37 @@ func (db *documents) Create(ownerID uint) (*Document, error) {
 		Content:            "",
 		LastModifiedUserID: ownerID,
 		Permission:         0,
+		Users: []User{{
+			Model: gorm.Model{
+				ID: ownerID,
+			},
+		}},
 	}
 	err = db.Model(&Document{}).Create(d).Error
 	return d, err
 }
 
+func (db *documents) Remove(uid string) error {
+	doc, err := db.GetDocByUID(uid)
+	if err != nil {
+		return err
+	}
+	tx := db.Begin()
+	_ = tx.Model(doc).Association("Users").Clear()
+	tx.Model(&Document{}).Delete(&Document{}, "uid = ?", uid)
+	return tx.Commit().Error
+}
+
 func (db *documents) GetDocByUID(uid string) (*Document, error) {
-	d := new(Document)
-	err := db.Model(&Document{}).Where("uid = ?", uid).First(d).Error
+	var d Document
+	err := db.Preload("Owner").Model(&Document{}).Where("uid = ?", uid).First(&d).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, ErrDocumentNotFound
 		}
 		return nil, err
 	}
-	return d, nil
+	return &d, nil
 }
 
 type UpdateDocOptions struct {
@@ -105,9 +127,10 @@ func (docs DocumentList) loadAttributes(db *gorm.DB) error {
 		return nil
 	}
 
-	// Load modified users
+	// Load modified and owner users
 	userSet := make(map[uint]*User)
 	for i := range docs {
+		userSet[docs[i].OwnerID] = nil
 		userSet[docs[i].LastModifiedUserID] = nil
 	}
 	userIDs := make([]uint, 0, len(userSet))
@@ -123,21 +146,22 @@ func (docs DocumentList) loadAttributes(db *gorm.DB) error {
 	}
 	for i, d := range docs {
 		docs[i].LastModifiedUser = userSet[d.LastModifiedUserID]
+		//docs[i].Owner = userSet[d.OwnerID]
 	}
 
 	return nil
 }
 
 func (db *documents) GetDocByShortID(shortID string) (*Document, error) {
-	d := new(Document)
-	err := db.Model(&Document{}).Where("short_id = ?", shortID).First(d).Error
+	var d Document
+	err := db.Preload("Owner").Model(&Document{}).Where("short_id = ?", shortID).First(&d).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, ErrDocumentNotFound
 		}
 		return nil, err
 	}
-	return d, nil
+	return &d, nil
 }
 
 func (db *documents) GetUserDocuments(opts *UserDocOptions) (DocumentList, error) {
@@ -146,9 +170,12 @@ func (db *documents) GetUserDocuments(opts *UserDocOptions) (DocumentList, error
 	}
 
 	docs := make(DocumentList, 0, opts.PageSize)
-	err := db.Debug().Model(&Document{}).Where("owner_id = ?", opts.UserID).
-		Offset((opts.Page - 1) * opts.PageSize).Limit(opts.PageSize).
-		Order("`updated_at` DESC").Find(&docs).Error
+	err := db.Preload("Owner").Model(&User{
+		Model: gorm.Model{
+			ID: opts.UserID,
+		},
+	}).Offset((opts.Page - 1) * opts.PageSize).Limit(opts.PageSize).
+		Order("`updated_at` DESC").Association("Documents").Find(&docs)
 	if err != nil {
 		return nil, err
 	}
@@ -156,7 +183,6 @@ func (db *documents) GetUserDocuments(opts *UserDocOptions) (DocumentList, error
 	if err = docs.loadAttributes(db.DB); err != nil {
 		return nil, err
 	}
-
 	return docs, err
 }
 
@@ -173,4 +199,28 @@ func (db *documents) SetPermission(uid string, permission uint) error {
 // GetShortID returns a random user salt token.
 func GetShortID() (string, error) {
 	return strutil.RandomChars(9)
+}
+
+func (db *documents) AppendEditor(userID, documentID uint) error {
+	return db.Model(&Document{
+		Model: gorm.Model{
+			ID: documentID,
+		},
+	}).Association("Users").Append(&User{
+		Model: gorm.Model{
+			ID: userID,
+		},
+	})
+}
+
+func (db *documents) RemoveEditor(userID, documentID uint) error {
+	return db.Model(&Document{
+		Model: gorm.Model{
+			ID: documentID,
+		},
+	}).Association("Users").Delete(&User{
+		Model: gorm.Model{
+			ID: userID,
+		},
+	})
 }

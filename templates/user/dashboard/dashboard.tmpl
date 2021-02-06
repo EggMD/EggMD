@@ -40,13 +40,15 @@
             <div class="card d-flex flex-column">
                 <div class="row row-0 flex-fill">
                     <div class="card-body">
-                        <h3 class="card-title"><a href="{{AppSubURL}}/{{.UID}}">
-                            {{if eq .Title ""}}
-                            Untitled
-                            {{else}}
-                            {{.Title}}
-                            {{end}}
-                        </a></h3>
+                        <h3 class="card-title">
+                            <a href="{{AppSubURL}}/e/{{.UID}}">
+                                {{if eq .Title ""}}
+                                Untitled
+                                {{else}}
+                                {{.Title}}
+                                {{end}}
+                            </a>
+                        </h3>
                         <div class="d-flex align-items-center pt-4 mt-auto">
                             {{if .LastModifiedUser}}
                             <span class="avatar"
@@ -56,9 +58,37 @@
                                 <div class="text-muted">{{.UpdatedAt | DateFmtLong}}</div>
                             </div>
                             {{end}}
-                            <div class="ml-auto">
-                                <div class="text-muted">{{.CreatedAt | DateFmtLong}}</div>
-                            </div>
+
+                            <ul class="ml-auto nav">
+                                <li class="nav-item">
+                                    <div class="text-muted text-right">{{ .Owner.Name }}</div>
+                                </li>
+                                <li class="nav-item">
+                                    <div class="nav-item dropdown ml-3">
+                                        <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-toggle="dropdown">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="50" height="50"
+                                                 viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                                                 stroke-linecap="round" stroke-linejoin="round">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                                <path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z"></path>
+                                                <circle cx="12" cy="12" r="3"></circle>
+                                            </svg>
+                                        </a>
+                                        <div class="dropdown-menu dropdown-menu-right">
+                                            <form method="post" action="/doc/remove/{{.UID}}">
+                                                {{ $.CSRFTokenHTML }}
+                                                <button type="submit" class="dropdown-item">
+                                                    {{ if eq .Owner.ID $.LoggedUserID }}
+                                                    删除
+                                                    {{ else }}
+                                                    移除
+                                                    {{ end }}
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
                         </div>
                     </div>
                 </div>
