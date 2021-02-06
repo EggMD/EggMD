@@ -19,7 +19,31 @@ func New(c *context.Context) {
 		c.Error(500, err.Error())
 		return
 	}
-	c.RedirectSubpath("/" + newDoc.UID)
+	c.RedirectSubpath("/e/" + newDoc.UID)
+}
+
+func Remove(c *context.Context) {
+	uid := c.Params(":uid")
+	defer c.Redirect("/")
+
+	doc, err := db.Documents.GetDocByUID(uid)
+	if err != nil {
+		log.Error("find doc: %v", err)
+		return
+	}
+
+	// Owner will remove the document.
+	if c.User.ID == doc.OwnerID {
+		err = db.Documents.Remove(uid)
+		if err != nil {
+			log.Error("Failed to remove doc: %v", err)
+		}
+		return
+	}
+	err = db.Documents.RemoveEditor(c.User.ID, doc.ID)
+	if err != nil {
+		log.Error("Failed to remove doc: %v", err)
+	}
 }
 
 func Editor(c *context.Context) {

@@ -16,6 +16,8 @@ var (
 type DocumentsStore interface {
 	// Create creates a new document belongs to one user with the given ownerID.
 	Create(ownerID uint) (*Document, error)
+	// Remove removes the document by given uid.
+	Remove(uid string) error
 	// GetDocByUID returns a document with the given uid.
 	GetDocByUID(uid string) (*Document, error)
 	// UpdateByUID updates a document with the given uid.
@@ -62,6 +64,17 @@ func (db *documents) Create(ownerID uint) (*Document, error) {
 	}
 	err = db.Model(&Document{}).Create(d).Error
 	return d, err
+}
+
+func (db *documents) Remove(uid string) error {
+	doc, err := db.GetDocByUID(uid)
+	if err != nil {
+		return err
+	}
+	tx := db.Begin()
+	tx.Model(doc).Association("Users").Clear()
+	tx.Model(&Document{}).Delete(&Document{}, "uid = ?", uid)
+	return tx.Commit().Error
 }
 
 func (db *documents) GetDocByUID(uid string) (*Document, error) {

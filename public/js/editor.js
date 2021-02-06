@@ -5,7 +5,7 @@ new Vue({
         return {
             loading: true,
             uid: uid,
-            url: 'ws://' + location.host + "/socket/" + uid,
+            url: 'ws://' + location.host + "/e/socket/" + uid,
             status: 'connecting',
             userID: 0,
             clientID: null,
