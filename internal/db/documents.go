@@ -72,7 +72,7 @@ func (db *documents) Remove(uid string) error {
 		return err
 	}
 	tx := db.Begin()
-	tx.Model(doc).Association("Users").Clear()
+	_ = tx.Model(doc).Association("Users").Clear()
 	tx.Model(&Document{}).Delete(&Document{}, "uid = ?", uid)
 	return tx.Commit().Error
 }
