@@ -57,7 +57,8 @@
                             </div>
                             {{end}}
                             <div class="ml-auto">
-                                <div class="text-muted">{{.CreatedAt | DateFmtLong}}</div>
+                                <div class="text-muted text-right">{{ .Owner.Name }}</div>
+                                <div class="text-muted text-right">{{.CreatedAt | DateFmtLong}}</div>
                             </div>
                         </div>
                     </div>
