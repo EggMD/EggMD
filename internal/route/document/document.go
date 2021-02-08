@@ -59,6 +59,7 @@ func Editor(c *context.Context) {
 }
 
 func Share(c *context.Context) {
+	c.Data["Doc"] = c.Doc
 	c.Data["RawHTML"], _ = mdutil.RenderMarkdown(c.Doc.Content)
 	c.Success(DOCUMENT_SHARE)
 }
