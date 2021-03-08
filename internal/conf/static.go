@@ -1,11 +1,14 @@
 package conf
 
+// Security 包含安全相关的配置。
+var Security SecurityOpts
+
 type SecurityOpts struct {
 	SecretKey string
 }
 
-// Security settings
-var Security SecurityOpts
+// Session 包含网站 Session 会话凭证相关的配置。
+var Session SessionOpts
 
 type SessionOpts struct {
 	CookieName     string
@@ -14,8 +17,8 @@ type SessionOpts struct {
 	CSRFCookieName string
 }
 
-// Session settings
-var Session SessionOpts
+// Server 包含 Web 服务器相关配置。
+var Server ServerOpts
 
 type ServerOpts struct {
 	LandingURL string
@@ -25,8 +28,8 @@ type ServerOpts struct {
 	HTTPPort string
 }
 
-// Server settings
-var Server ServerOpts
+// Database 包含数据库相关配置。
+var Database DatabaseOpts
 
 type DatabaseOpts struct {
 	Host         string
@@ -37,6 +40,3 @@ type DatabaseOpts struct {
 	MaxOpenConns int
 	MaxIdleConns int
 }
-
-// Database settings
-var Database DatabaseOpts

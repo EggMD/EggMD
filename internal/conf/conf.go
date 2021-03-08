@@ -2,15 +2,10 @@ package conf
 
 import (
 	"github.com/BurntSushi/toml"
-	log "unknwon.dev/clog/v2"
 )
 
-func init() {
-	_ = log.NewConsole()
-}
-
-// Init parses the config file and set the config.
-func Init() {
+// Init 解析配置文件并初始化配置信息。
+func Init(configPath string) error {
 	var conf struct {
 		Security SecurityOpts
 		Session  SessionOpts
@@ -18,13 +13,15 @@ func Init() {
 		Database DatabaseOpts
 	}
 
-	_, err := toml.DecodeFile("./conf/app.toml", &conf)
+	_, err := toml.DecodeFile(configPath, &conf)
 	if err != nil {
-		log.Fatal("Failed to load config: %v", err)
+		return err
 	}
 
 	Security = conf.Security
 	Session = conf.Session
 	Server = conf.Server
 	Database = conf.Database
+
+	return nil
 }

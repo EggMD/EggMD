@@ -34,15 +34,18 @@ var Web = cli.Command{
 	},
 }
 
-// newMacaron initializes Macaron instance.
+// newMacaron 初始化一个新的 Macaron 实例。
 func newMacaron() *macaron.Macaron {
 	m := macaron.Classic()
-
 	return m
 }
 
 func runWeb(c *cli.Context) error {
-	conf.Init()
+	err := conf.Init("./conf/app.toml")
+	if err != nil {
+		return err
+	}
+
 	_, _ = db.Init()
 
 	m := newMacaron()
