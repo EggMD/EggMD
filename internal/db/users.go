@@ -90,13 +90,14 @@ func (db *users) Create(opts CreateUserOpts) (*User, error) {
 	}
 
 	user := &User{
-		Name:        name,
-		Email:       email,
-		Password:    opts.Password,
-		LoginName:   opts.LoginName,
-		IsAdmin:     opts.Admin,
-		Avatar:      cryptoutil.MD5(email),
-		AvatarEmail: email,
+		Name:             name,
+		Email:            email,
+		KeepEmailPrivate: true,
+		Password:         opts.Password,
+		LoginName:        opts.LoginName,
+		IsAdmin:          opts.Admin,
+		Avatar:           cryptoutil.MD5(email),
+		AvatarEmail:      email,
 	}
 
 	user.Salt, err = GetUserSalt()

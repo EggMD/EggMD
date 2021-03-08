@@ -1,11 +1,13 @@
 package route
 
 import (
+	"fmt"
 	"net/http"
+
+	"gopkg.in/macaron.v1"
 
 	"github.com/EggMD/EggMD/internal/context"
 	"github.com/EggMD/EggMD/internal/route/user"
-	"gopkg.in/macaron.v1"
 )
 
 func Home(c *context.Context) {
@@ -20,5 +22,5 @@ func Home(c *context.Context) {
 
 func NotFound(c *macaron.Context) {
 	c.Data["Title"] = "页面不存在"
-	c.HTML(http.StatusNotFound, "404")
+	c.HTML(http.StatusNotFound, fmt.Sprintf("status/%d", http.StatusNotFound))
 }

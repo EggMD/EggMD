@@ -1,18 +1,20 @@
 package context
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/go-macaron/csrf"
+	"github.com/go-macaron/session"
+	"gopkg.in/macaron.v1"
+	log "unknwon.dev/clog/v2"
 
 	"github.com/EggMD/EggMD/internal/conf"
 	"github.com/EggMD/EggMD/internal/db"
 	"github.com/EggMD/EggMD/internal/form"
 	"github.com/EggMD/EggMD/internal/template"
-	"github.com/go-macaron/csrf"
-	"github.com/go-macaron/session"
-	"gopkg.in/macaron.v1"
-	log "unknwon.dev/clog/v2"
 )
 
 // Context represents context of a request.
@@ -70,6 +72,18 @@ func (c *Context) HasError() bool {
 // Success responses template with status http.StatusOK.
 func (c *Context) Success(name string) {
 	c.HTML(http.StatusOK, name)
+}
+
+// Error renders the 500 page.
+func (c *Context) Error(err error) {
+	c.Title("服务内部错误")
+	c.HTML(http.StatusInternalServerError, fmt.Sprintf("status/%d", http.StatusInternalServerError))
+}
+
+// NotFound renders the 404 page.
+func (c *Context) NotFound() {
+	c.Title("页面不存在")
+	c.HTML(http.StatusNotFound, fmt.Sprintf("status/%d", http.StatusNotFound))
 }
 
 // RenderWithErr used for page has form validation but need to prompt error to users.

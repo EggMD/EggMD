@@ -12,11 +12,12 @@ import (
 // User represents the object of individual.
 type User struct {
 	gorm.Model
-	Name      string `gorm:"NOT NULL"`
-	LoginName string `gorm:"UNIQUE"`
-	Email     string `gorm:"NOT NULL"`
-	Password  string `gorm:"NOT NULL"`
-	Salt      string `gorm:"TYPE:VARCHAR(10)"`
+	Name             string `gorm:"NOT NULL"`
+	LoginName        string `gorm:"UNIQUE"`
+	Email            string `gorm:"NOT NULL"`
+	KeepEmailPrivate bool
+	Password         string `gorm:"NOT NULL"`
+	Salt             string `gorm:"TYPE:VARCHAR(10)"`
 
 	// Permissions
 	IsAdmin bool
@@ -31,9 +32,10 @@ type User struct {
 // GetDocuments returns the user's documents which belong to itself.
 func (u *User) GetDocuments(page, pageSize int) (DocumentList, error) {
 	return Documents.GetUserDocuments(&UserDocOptions{
-		UserID:   u.ID,
-		Page:     page,
-		PageSize: pageSize,
+		UserID:      u.ID,
+		ShowPrivate: true,
+		Page:        page,
+		PageSize:    pageSize,
 	})
 }
 

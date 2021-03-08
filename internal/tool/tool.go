@@ -15,8 +15,11 @@ func HashEmail(email string) string {
 	return hex.EncodeToString(h.Sum(nil))
 }
 
-// AvatarLink returns relative avatar link to the site domain by given email.
-func AvatarLink(email string) (url string) {
-	url = "https://cdn.v2ex.com/gravatar/" + HashEmail(email) + "?d=identicon"
+// AvatarLink returns relative avatar link to the site domain by given email or avatar hash.
+func AvatarLink(input string) (url string) {
+	if strings.ContainsRune(input, '@') {
+		input = HashEmail(input)
+	}
+	url = "https://cdn.v2ex.com/gravatar/" + input + "?d=identicon"
 	return url
 }

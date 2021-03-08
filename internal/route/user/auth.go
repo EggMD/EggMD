@@ -3,17 +3,19 @@ package user
 import (
 	"net/url"
 
+	"github.com/pkg/errors"
+
 	"github.com/EggMD/EggMD/internal/conf"
 	"github.com/EggMD/EggMD/internal/context"
 	"github.com/EggMD/EggMD/internal/db"
 	"github.com/EggMD/EggMD/internal/form"
 	"github.com/EggMD/EggMD/internal/tool"
-	"github.com/pkg/errors"
 )
 
 const (
-	LOGIN  = "user/auth/login"
-	SIGNUP = "user/auth/signup"
+	LOGIN   = "user/auth/login"
+	SIGNUP  = "user/auth/signup"
+	PROFILE = "user/profile/profile"
 )
 
 func Login(c *context.Context) {
@@ -23,7 +25,7 @@ func Login(c *context.Context) {
 	if len(redirectTo) > 0 {
 		c.SetCookie("redirect_to", redirectTo, 0, conf.Server.Subpath)
 	}
-	
+
 	c.Success("user/auth/login")
 }
 
@@ -42,7 +44,7 @@ func LoginPost(c *context.Context, f form.SignIn) {
 			c.FormErr("UserName", "Password")
 			c.RenderWithErr("用户名或密码错误", LOGIN, &f)
 		default:
-			c.Error(400, "authenticate user")
+			c.Error(err)
 		}
 		return
 	}
@@ -99,7 +101,7 @@ func SignUpPost(c *context.Context, f form.Register) {
 			c.FormErr("Email")
 			c.RenderWithErr("电子邮箱已注册", SIGNUP, &f)
 		default:
-			c.Error(400, "create user")
+			c.Error(err)
 		}
 		return
 	}
@@ -113,4 +115,35 @@ func SignOut(c *context.Context) {
 	_ = c.Session.Destory(c.Context)
 	c.SetCookie(conf.Session.CSRFCookieName, "", -1, conf.Server.Subpath)
 	c.RedirectSubpath("/")
+}
+
+func Profile(c *context.Context) {
+	loginName := c.Params(":name")
+	if loginName == "" {
+		c.Redirect("/user/login")
+		return
+	}
+
+	profileUser, err := db.Users.GetByLoginName(loginName)
+	if err != nil {
+		c.NotFound()
+		return
+	}
+	c.Data["Owner"] = profileUser
+	c.Title(profileUser.Name)
+
+	showPrivate := c.IsLogged && (profileUser.ID == c.User.ID || c.User.IsAdmin)
+	documents, err := db.Documents.GetUserDocuments(&db.UserDocOptions{
+		UserID:      profileUser.ID,
+		ShowPrivate: showPrivate,
+		Page:        0,
+		PageSize:    0,
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	c.Data["Docs"] = documents
+
+	c.Success(PROFILE)
 }

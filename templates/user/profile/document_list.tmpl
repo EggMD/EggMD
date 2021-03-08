@@ -1,0 +1,33 @@
+{{ range .Docs }}
+<div class="card-body">
+    <h3 class="card-title">
+        <a href="{{AppSubURL}}/e/{{.UID}}">
+            {{if eq .Title ""}}
+            Untitled
+            {{else}}
+            {{.Title}}
+            {{end}}
+        </a>
+    </h3>
+    <div class="d-flex align-items-center pt-4 mt-auto">
+        {{if .LastModifiedUser}}
+        <span class="avatar"
+              style="background-image: url({{ .LastModifiedUser.Email | AvatarLink }})"></span>
+        <div class="ml-3">
+            <a href="/user/{{ .LastModifiedUser.LoginName }}" class="text-body">{{.LastModifiedUser.Name}}</a>
+            <div class="text-muted">{{.UpdatedAt | DateFmtLong}}</div>
+        </div>
+        {{else}}
+        <span class="avatar" style="background-image: url()"></span>
+        <div class="ml-3">
+            <span class="text-body">Guest</span>
+            <div class="text-muted">{{.UpdatedAt | DateFmtLong}}</div>
+        </div>
+        {{end}}
+
+        <ul class="ml-auto nav">
+
+        </ul>
+    </div>
+</div>
+{{ end }}

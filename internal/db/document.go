@@ -36,6 +36,10 @@ type Document struct {
 
 // HasPermission checks if the user has permission to do the operation.
 func (d *Document) HasPermission(userID uint) (view, edit bool) {
+	if userID == d.OwnerID {
+		return true, true
+	}
+	
 	// Guest
 	if userID == 0 {
 		switch d.Permission {

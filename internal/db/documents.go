@@ -115,9 +115,10 @@ func (db *documents) UpdateByUID(uid string, opts UpdateDocOptions) error {
 }
 
 type UserDocOptions struct {
-	UserID   uint
-	Page     int
-	PageSize int
+	UserID      uint
+	ShowPrivate bool
+	Page        int
+	PageSize    int
 }
 
 type DocumentList []*Document
@@ -169,13 +170,18 @@ func (db *documents) GetUserDocuments(opts *UserDocOptions) (DocumentList, error
 		opts.Page = 1
 	}
 
+	var permission = PROTECTED
+	if opts.ShowPrivate {
+		permission = PRIVATE
+	}
+
 	docs := make(DocumentList, 0, opts.PageSize)
 	err := db.Preload("Owner").Model(&User{
 		Model: gorm.Model{
 			ID: opts.UserID,
 		},
-	}).Offset((opts.Page - 1) * opts.PageSize).Limit(opts.PageSize).
-		Order("`updated_at` DESC").Association("Documents").Find(&docs)
+	}).Offset((opts.Page-1)*opts.PageSize).Limit(opts.PageSize).
+		Order("`updated_at` DESC").Where("`permission` <= ?", permission).Association("Documents").Find(&docs)
 	if err != nil {
 		return nil, err
 	}

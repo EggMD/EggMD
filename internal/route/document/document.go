@@ -16,7 +16,7 @@ const (
 func New(c *context.Context) {
 	newDoc, err := db.Documents.Create(c.User.ID)
 	if err != nil {
-		c.Error(500, err.Error())
+		c.Error(err)
 		return
 	}
 	c.RedirectSubpath("/e/" + newDoc.UID)

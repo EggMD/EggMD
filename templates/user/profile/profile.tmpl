@@ -1,0 +1,78 @@
+{{template "base/header" .}}
+<div class="row row-cards">
+    <div class="col-md-3 col-lg-3">
+        <div class="card">
+            <div class="card-body p-4 text-center">
+                <span class="avatar avatar-xl mb-3 avatar-rounded"
+                      style="background-image: url({{ .Owner.AvatarEmail | AvatarLink }})"></span>
+                <h3 class="m-0 mb-1"> {{ .Owner.Name }} </h3>
+                <div class="text-muted"> {{ .Owner.LoginName }}</div>
+            </div>
+
+            <div class="card-body">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
+                     stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <rect x="3" y="5" width="18" height="14" rx="2"/>
+                    <polyline points="3 7 12 13 21 7"/>
+                </svg>
+                {{ .Owner.Email }}
+            </div>
+            <div class="card-body">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
+                     stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <circle cx="12" cy="12" r="9"/>
+                    <polyline points="12 7 12 12 15 15"/>
+                </svg>
+                加入于 {{ .Owner.CreatedAt | DateFmtShort }}
+            </div>
+            <div class="card-footer">
+                <span class="avatar" style="background-image: url(...)"></span>
+                <span class="avatar" style="background-image: url(...)"></span>
+                <span class="avatar" style="background-image: url(...)"></span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-9 col-lg-9">
+        <div class="card">
+            <div class="card">
+                <ul class="nav nav-tabs">
+                    <li class="nav-item">
+                        <a href="" class="nav-link active">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24"
+                                 viewBox="0 0 24 24"
+                                 stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round"
+                                 stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                <path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0"/>
+                                <path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0"/>
+                                <line x1="3" y1="6" x2="3" y2="19"/>
+                                <line x1="12" y1="6" x2="12" y2="19"/>
+                                <line x1="21" y1="6" x2="21" y2="19"/>
+                            </svg>
+                            <span class="ml-2">文档列表</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#tabs-profile-ex2" class="nav-link">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24"
+                                 viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                                 stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                <circle cx="5" cy="19" r="1"/>
+                                <path d="M4 4a16 16 0 0 1 16 16"/>
+                                <path d="M4 11a9 9 0 0 1 9 9"/>
+                            </svg>
+                            <span class="ml-2">公开活动</span>
+                        </a>
+                    </li>
+                </ul>
+                <div class="card-body">
+                    {{template "user/profile/document_list" .}}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{template "base/footer" .}}

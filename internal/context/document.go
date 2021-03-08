@@ -1,8 +1,9 @@
 package context
 
 import (
-	"github.com/EggMD/EggMD/internal/db"
 	"gopkg.in/macaron.v1"
+
+	"github.com/EggMD/EggMD/internal/db"
 )
 
 func DocumentUIDAssignment() macaron.Handler {
@@ -10,7 +11,7 @@ func DocumentUIDAssignment() macaron.Handler {
 		uid := c.Params(":uid")
 		doc, err := db.Documents.GetDocByUID(uid)
 		if err != nil {
-			c.Success("404")
+			c.NotFound()
 			return
 		}
 
@@ -24,7 +25,7 @@ func DocumentShortIDAssignment() macaron.Handler {
 		shortID := c.Params(":shortID")
 		doc, err := db.Documents.GetDocByShortID(shortID)
 		if err != nil {
-			c.Success("404")
+			c.NotFound()
 			return
 		}
 

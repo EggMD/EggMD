@@ -75,7 +75,9 @@ func runWeb(c *cli.Context) error {
 		m.Group("/user", func() {
 			m.Post("/logout", user.SignOut)
 		})
+		m.Get("/user/:name", user.Profile)
 
+		// Document
 		m.Group("/doc", func() {
 			m.Post("/new", document.New)
 			m.Post("/remove/:uid", document.Remove)

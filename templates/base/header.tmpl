@@ -49,7 +49,7 @@
                         </div>
                     </a>
                     <div class="dropdown-menu dropdown-menu-right dropdown-menu-arrow">
-                        <a href="#" class="dropdown-item">个人信息</a>
+                        <a href="{{AppSubURL}}/user/{{ .LoggedUser.LoginName }}" class="dropdown-item">个人信息</a>
                         <div class="dropdown-divider"></div>
                         <a href="#" class="dropdown-item">设置</a>
                         <form action="{{AppSubURL}}/user/logout" method="POST">
