@@ -32,7 +32,7 @@ func Toggle(options *ToggleOptions) macaron.Handler {
 
 		// 已登录用户尝试访问未登录页面，跳转至用户仪表盘。
 		if options.SignOutRequired && c.IsLogged && c.Req.RequestURI != "/" {
-			c.RedirectSubpath("/")
+			c.RedirectSubPath("/")
 			return
 		}
 
@@ -40,7 +40,7 @@ func Toggle(options *ToggleOptions) macaron.Handler {
 			// 未登录用户尝试访问需要登录的页面，跳转到用户登录页面。
 			if !c.IsLogged {
 				c.SetCookie("redirect_to", url.QueryEscape(conf.Server.SubPath+c.Req.RequestURI), 0, conf.Server.SubPath)
-				c.RedirectSubpath("/user/login")
+				c.RedirectSubPath("/user/login")
 				return
 			}
 		}
