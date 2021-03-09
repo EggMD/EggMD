@@ -72,10 +72,10 @@ func (db *documents) GetDocByShortID(shortID string) (*Document, error) {
 }
 
 type UserDocOptions struct {
-	UserID      uint
-	ShowPrivate bool
-	Page        int
-	PageSize    int
+	UserID    uint
+	LoggedUID uint
+	Page      int
+	PageSize  int
 }
 
 func (db *documents) GetUserDocuments(opts *UserDocOptions) (DocumentList, error) {
@@ -83,9 +83,16 @@ func (db *documents) GetUserDocuments(opts *UserDocOptions) (DocumentList, error
 		opts.Page = 1
 	}
 
-	var permission = PROTECTED
-	if opts.ShowPrivate {
-		permission = PRIVATE
+	var permissions []int
+	if opts.LoggedUID == 0 {
+		// 游客
+		permissions = []int{FREELY, EDITABLE, LOCKED}
+	} else if opts.LoggedUID == opts.UserID {
+		// 作者
+		permissions = []int{FREELY, EDITABLE, LIMITED, LOCKED, PROTECTED, PRIVATE}
+	} else {
+		// 注册用户
+		permissions = []int{FREELY, EDITABLE, LIMITED, LOCKED, PROTECTED}
 	}
 
 	docs := make(DocumentList, 0, opts.PageSize)
@@ -94,7 +101,7 @@ func (db *documents) GetUserDocuments(opts *UserDocOptions) (DocumentList, error
 			ID: opts.UserID,
 		},
 	}).Offset((opts.Page-1)*opts.PageSize).Limit(opts.PageSize).
-		Order("`updated_at` DESC").Where("`permission` <= ?", permission).Association("Documents").Find(&docs)
+		Order("`updated_at` DESC").Where("`permission` IN ?", permissions).Association("Documents").Find(&docs)
 	if err != nil {
 		return nil, err
 	}

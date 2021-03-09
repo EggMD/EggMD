@@ -12,27 +12,31 @@ import (
 )
 
 var (
-	ErrUserNotFound      = errors.New("user not found")
+	// ErrUserNotFound 为用户不存在错误。
+	ErrUserNotFound = errors.New("user not found")
+	// ErrUserAlreadyExists 为用户已存在（已重复）错误。
 	ErrUserAlreadyExists = errors.New("user already exists")
-	ErrEmptyUserName     = errors.New("user name is empty")
-	ErrEmailAlreadyUsed  = errors.New("email is already used")
-	ErrBadCredentials    = errors.New("bad credentials")
+	// ErrEmptyUserName 为用户名为空错误。
+	ErrEmptyUserName = errors.New("user name is empty")
+	// ErrEmailAlreadyUsed 为电子邮箱地址已存在错误。
+	ErrEmailAlreadyUsed = errors.New("email is already used")
+	// ErrBadCredentials 为用户登录凭证错误。
+	ErrBadCredentials = errors.New("bad credentials")
 )
 
-// UsersStore is the persistent interface for users.
+// UsersStore 是 Users 用户操作的实现接口。
 type UsersStore interface {
-	// Authenticate validates username and password.
+	// Authenticate 检查根据输入的邮箱与密码验证用户。
 	Authenticate(email, password string) (*User, error)
-	// Create creates a new user and persists to database.
-	// It returns ErrUserAlreadyExists when a user with same name already exists,
-	// or ErrEmailAlreadyUsed if the email has been used by another user.
+	// Create 在数据库中创建一个新的用户。
+	// 若用户名已存在，则会返回 ErrUserAlreadyExists 错误，若电子邮箱已被其他用户使用，则返回 ErrEmailAlreadyUsed 错误。
 	Create(opts CreateUserOpts) (*User, error)
-	// GetByEmail returns the user with given email.
+	// GetByEmail 根据输入的电子邮箱地址查找用户并返回。
 	GetByEmail(email string) (*User, error)
-	// GetByID returns the user with given ID. It returns ErrUserNotFound when not found.
+	// GetByID 根据输入的用户 ID 查找用户并返回，若用户不存在则返回 ErrUserNotFound 错误。
 	GetByID(id uint) (*User, error)
-	// GetByUsername returns the user with given username. It returns ErrUserNotFound when not found.
-	GetByLoginName(username string) (*User, error)
+	// GetByLoginName 根据输入的用户登录名查找用户并返回，若用户不存在则返回 ErrUserNotFound 错误。
+	GetByLoginName(loginName string) (*User, error)
 }
 
 var Users UsersStore
@@ -58,10 +62,10 @@ func (db *users) Authenticate(email, password string) (*User, error) {
 		return nil, errors.Wrap(err, "get user")
 	}
 
-	// User found in the database
 	if err == nil && user.ValidatePassword(password) {
 		return user, nil
 	}
+	// 用户凭证错误，或用户不存在
 	return nil, ErrBadCredentials
 }
 
@@ -92,7 +96,7 @@ func (db *users) Create(opts CreateUserOpts) (*User, error) {
 	user := &User{
 		Name:             name,
 		Email:            email,
-		KeepEmailPrivate: true,
+		KeepEmailPrivate: true, // 默认隐藏用户电子邮箱地址
 		Password:         opts.Password,
 		LoginName:        opts.LoginName,
 		IsAdmin:          opts.Admin,
@@ -148,12 +152,12 @@ func (db *users) GetByEmail(email string) (*User, error) {
 	return user, nil
 }
 
-// GetUserSalt returns a random user salt token.
+// GetUserSalt 返回一个随机生成的盐。
 func GetUserSalt() (string, error) {
 	return strutil.RandomChars(10)
 }
 
-// isUsernameAllowed return an error if given name is a reserved name or pattern for users.
+// isUsernameAllowed 检查用户名是否合法。
 func isUsernameAllowed(name string) error {
 	name = strings.TrimSpace(strings.ToLower(name))
 	if utf8.RuneCountInString(name) == 0 {
