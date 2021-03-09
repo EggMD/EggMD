@@ -4,12 +4,13 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/EggMD/EggMD/internal/conf"
-	"github.com/EggMD/EggMD/internal/db"
 	"github.com/go-macaron/csrf"
 	"github.com/go-macaron/session"
 	"gopkg.in/macaron.v1"
 	log "unknwon.dev/clog/v2"
+
+	"github.com/EggMD/EggMD/internal/conf"
+	"github.com/EggMD/EggMD/internal/db"
 )
 
 type ToggleOptions struct {
@@ -21,34 +22,30 @@ type ToggleOptions struct {
 
 func Toggle(options *ToggleOptions) macaron.Handler {
 	return func(c *Context) {
-		// Check CSRF token.
-		if c.Req.Method == "POST" {
+		// 检查 CSRF Token。
+		if c.Req.Method == http.MethodPost {
 			csrf.Validate(c.Context, c.csrf)
 			if c.Written() {
 				return
 			}
 		}
 
-		// Check non-logged users landing page.
-		if !c.IsLogged && c.Req.RequestURI == "/" && conf.Server.LandingURL != "/" {
-			c.RedirectSubpath(conf.Server.LandingURL)
-			return
-		}
-
-		// Redirect to dashboard if user tries to visit any non-login page.
+		// 已登录用户尝试访问未登录页面，跳转至用户仪表盘。
 		if options.SignOutRequired && c.IsLogged && c.Req.RequestURI != "/" {
 			c.RedirectSubpath("/")
 			return
 		}
 
 		if options.SignInRequired {
+			// 未登录用户尝试访问需要登录的页面，跳转到用户登录页面。
 			if !c.IsLogged {
-				c.SetCookie("redirect_to", url.QueryEscape(conf.Server.Subpath+c.Req.RequestURI), 0, conf.Server.Subpath)
+				c.SetCookie("redirect_to", url.QueryEscape(conf.Server.SubPath+c.Req.RequestURI), 0, conf.Server.SubPath)
 				c.RedirectSubpath("/user/login")
 				return
 			}
 		}
 
+		// 非管理员权限用户访问管理员页面，提示禁止访问。
 		if options.AdminRequired {
 			if !c.User.IsAdmin {
 				c.Status(http.StatusForbidden)
@@ -59,44 +56,24 @@ func Toggle(options *ToggleOptions) macaron.Handler {
 	}
 }
 
-func DocToggle() macaron.Handler {
+func DocumentToggle() macaron.Handler {
 	return func(c *Context) {
-		switch c.Doc.Permission {
-		case db.FREELY: // Anyone can view & edit
-			c.Permission.View = true
-			c.Permission.Edit = true
-		case db.EDITABLE: // Anyone can view, Signed-in people can edit
-			c.Permission.View = true
-			c.Permission.View = c.IsLogged
-		case db.LIMITED: // Signed-in people can view & edit
-			if !c.IsLogged {
-				c.RedirectSubpath("/")
-				return
-			}
-			c.Permission.View = c.IsLogged
-			c.Permission.View = c.IsLogged
-		case db.LOCKED: // Anyone can view, Only owner can edit
-			c.Permission.View = true
-			c.Permission.View = c.IsLogged && c.User.ID == c.Doc.OwnerID
-		case db.PROTECTED: // Signed-in people can view, Only owner can edit
-			if !c.IsLogged {
-				c.RedirectSubpath("/")
-				return
-			}
-			c.Permission.View = c.IsLogged
-			c.Permission.View = c.IsLogged && c.User.ID == c.Doc.OwnerID
-		case db.PRIVATE: // Only owner can view & edit
-			if !c.IsLogged || c.User.ID != c.Doc.OwnerID {
-				c.RedirectSubpath("/")
-				return
-			}
-			c.Permission.View = c.IsLogged && c.User.ID == c.Doc.OwnerID
-			c.Permission.View = c.IsLogged && c.User.ID == c.Doc.OwnerID
+		userID := uint(0)
+		if c.IsLogged {
+			userID = c.User.ID
+		}
+
+		permission := c.Doc.HasPermission(userID)
+		// 文档无可读权限，跳转至 404 页面。
+		if !permission.CanRead() {
+			c.NotFound()
+			return
 		}
 	}
 }
 
-// authenticatedUser returns the user object of the authenticated user.
+// authenticatedUser 从当前 Session 中尝试获取已登录用户信息。
+// 若用户未登录，则返回 nil。
 func authenticatedUser(sess session.Store) *db.User {
 	uid := sess.Get("uid")
 	if uid == nil {

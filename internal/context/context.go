@@ -17,48 +17,39 @@ import (
 	"github.com/EggMD/EggMD/internal/template"
 )
 
-// Context represents context of a request.
+// Context 是对 Macaron 中 context 上下文的扩展。
 type Context struct {
 	*macaron.Context
 	csrf    csrf.CSRF
 	Flash   *session.Flash
 	Session session.Store
 
-	Link     string // Current request URL
+	Link     string // 当前请求 URL
 	User     *db.User
 	IsLogged bool
 
-	Doc        *db.Document
-	Permission *Permission
+	// 当前所在文档相关页面，文档信息
+	Doc *db.Document
 }
 
-type Permission struct {
-	View bool
-	Edit bool
-}
-
-// Title sets the "Title" field in template data.
+// Title 设置模板数据中的 Title 字段。
 func (c *Context) Title(title string) {
 	c.Data["Title"] = title
 }
 
-// PageIs sets "PageIsxxx" field in template data.
+// PageIs 设置模板数据中的 `PageIsxxx` 字段。
 func (c *Context) PageIs(name string) {
 	c.Data["PageIs"+name] = true
 }
 
-// FormErr sets "Err_xxx" field in template data.
+// FormErr 设置模板数据中的 `Err_xxx` 字段。
 func (c *Context) FormErr(names ...string) {
 	for i := range names {
 		c.Data["Err_"+names[i]] = true
 	}
 }
 
-func (c *Context) GetErrMsg() string {
-	return c.Data["ErrorMsg"].(string)
-}
-
-// HasError returns true if error occurs in form validation.
+// HasError 在表单验证发生错误时将返回 true。
 func (c *Context) HasError() bool {
 	hasErr, ok := c.Data["HasError"]
 	if !ok {
@@ -69,24 +60,24 @@ func (c *Context) HasError() bool {
 	return hasErr.(bool)
 }
 
-// Success responses template with status http.StatusOK.
+// Success 返回 http.StatusOK 状态码模板响应。
 func (c *Context) Success(name string) {
 	c.HTML(http.StatusOK, name)
 }
 
-// Error renders the 500 page.
+// Error 返回 http.StatusInternalServerError 状态码的错误响应。
 func (c *Context) Error(err error) {
 	c.Title("服务内部错误")
 	c.HTML(http.StatusInternalServerError, fmt.Sprintf("status/%d", http.StatusInternalServerError))
 }
 
-// NotFound renders the 404 page.
+// NotFound 返回页面不存在响应。
 func (c *Context) NotFound() {
 	c.Title("页面不存在")
 	c.HTML(http.StatusNotFound, fmt.Sprintf("status/%d", http.StatusNotFound))
 }
 
-// RenderWithErr used for page has form validation but need to prompt error to users.
+// RenderWithErr 用于页面含有表单验证且需要将验证错误返回给用户的场景。
 func (c *Context) RenderWithErr(msg, tpl string, f interface{}) {
 	if f != nil {
 		form.Assign(f, c.Data)
@@ -97,29 +88,28 @@ func (c *Context) RenderWithErr(msg, tpl string, f interface{}) {
 	c.HTML(http.StatusOK, tpl)
 }
 
-// RedirectSubpath responses redirection with given location and status.
-// It prepends setting.Server.Subpath to the location string.
-func (c *Context) RedirectSubpath(location string, status ...int) {
-	c.Redirect(conf.Server.Subpath+location, status...)
+// RedirectSubPath 根据指定路径与状态码返回页面跳转响应。
+// 它会在跳转地址前拼接加上 conf.Server.SubPath 前缀路径。
+func (c *Context) RedirectSubPath(location string, status ...int) {
+	c.Redirect(conf.Server.SubPath+location, status...)
 }
 
-// Contexter initializes a classic context for a request.
+// Contexter 初始化请求的上下文。
 func Contexter() macaron.Handler {
 	return func(ctx *macaron.Context, sess session.Store, f *session.Flash, x csrf.CSRF) {
 		c := &Context{
-			Context:    ctx,
-			csrf:       x,
-			Flash:      f,
-			Session:    sess,
-			Link:       conf.Server.Subpath + strings.TrimSuffix(ctx.Req.URL.Path, "/"),
-			Permission: new(Permission),
+			Context: ctx,
+			csrf:    x,
+			Flash:   f,
+			Session: sess,
+			Link:    conf.Server.SubPath + strings.TrimSuffix(ctx.Req.URL.Path, "/"),
 		}
+
 		c.Data["Link"] = template.EscapePound(c.Link)
 		c.Data["PageStartTime"] = time.Now()
 
-		// Get user from session or header when possible
+		// 尝试从 Session 中获取当前登录用户信息。
 		c.User = authenticatedUser(c.Session)
-
 		if c.User != nil {
 			c.IsLogged = true
 			c.Data["IsLogged"] = c.IsLogged
@@ -134,6 +124,7 @@ func Contexter() macaron.Handler {
 
 		c.Data["CSRFToken"] = x.GetToken()
 		c.Data["CSRFTokenHTML"] = template.Safe(`<input type="hidden" name="_csrf" value="` + x.GetToken() + `">`)
+		
 		log.Trace("Session ID: %s", sess.ID())
 		log.Trace("CSRF Token: %v", c.Data["CSRFToken"])
 

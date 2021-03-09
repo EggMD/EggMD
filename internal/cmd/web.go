@@ -46,7 +46,10 @@ func runWeb(c *cli.Context) error {
 		return err
 	}
 
-	_, _ = db.Init()
+	err = db.Init()
+	if err != nil {
+		return err
+	}
 
 	m := newMacaron()
 
@@ -80,31 +83,30 @@ func runWeb(c *cli.Context) error {
 		})
 		m.Get("/user/:name", user.Profile)
 
-		// Document
+		// 文档
 		m.Group("/doc", func() {
 			m.Post("/new", document.New)
 			m.Post("/remove/:uid", document.Remove)
 		}, reqSignIn)
 
-		// Online editor
+		// 文档在线编辑器
 		m.Group("/e", func() {
-			// Web page
+			// 网页前端
 			m.Get("/:uid", document.Editor)
-
-			// Websocket connection
+			// Websocket 连接
 			m.Get("/socket/:uid", sockets.JSON(socket.EventMessage{}), socket.Handler)
 
-		}, context.DocumentUIDAssignment(), context.DocToggle())
+		}, context.DocumentUIDAssignment(), context.DocumentToggle())
 
-		// Share document
+		// 分享文档
 		m.Group("/s/:shortID", func() {
 			m.Get("/", document.Share)
-		}, context.DocumentShortIDAssignment(), context.DocToggle())
+		}, context.DocumentShortIDAssignment(), context.DocumentToggle())
 	},
 
 		session.Sessioner(session.Options{
 			CookieName:  conf.Session.CookieName,
-			CookiePath:  conf.Server.Subpath,
+			CookiePath:  conf.Server.SubPath,
 			Gclifetime:  conf.Session.GCInterval,
 			Maxlifetime: conf.Session.MaxLifeTime,
 		}),
@@ -112,7 +114,7 @@ func runWeb(c *cli.Context) error {
 			Secret:         conf.Security.SecretKey,
 			Header:         "X-CSRF-Token",
 			Cookie:         conf.Session.CSRFCookieName,
-			CookiePath:     conf.Server.Subpath,
+			CookiePath:     conf.Server.SubPath,
 			CookieHttpOnly: true,
 			SetCookie:      true,
 		}),

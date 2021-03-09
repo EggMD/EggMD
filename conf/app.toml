@@ -8,7 +8,7 @@ MaxLifeTime = 86400
 CSRFCookieName = "_csrf"
 
 [Server]
-LandingURL = "/"
+SubPath = ""
 HTTPAddr = "0.0.0.0"
 HTTPPort = "1999"
 
