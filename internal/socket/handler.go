@@ -1,6 +1,7 @@
 package socket
 
 import (
+	"net/http"
 	"time"
 
 	"github.com/satori/go.uuid"
@@ -74,9 +75,11 @@ func Handler(ctx *context.Context, receiver <-chan *EventMessage, sender chan<- 
 		case err := <-errorChannel:
 			docSession.removeClient(client)
 			docSession.BroadcastExcept(client, &EventMessage{"quit", client.ID})
-
-			log.Error("connection error: %v", err)
-			return 500, "an error occurred"
+			if err != nil {
+				log.Error("connection error: %v", err)
+				return http.StatusInternalServerError, "error occur"
+			}
+			return http.StatusOK, "ok"
 		}
 	}
 }

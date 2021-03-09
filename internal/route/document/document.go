@@ -40,9 +40,8 @@ func Remove(c *context.Context) {
 		err = db.Documents.Remove(uid)
 		if err != nil {
 			log.Error("Failed to remove doc: %v", err)
+			return
 		}
-		c.Error(err)
-		return
 	}
 	// ⚠️ 文档作者也属于文档协作者，因此在删除文档时也需要删除协作者关系。
 	err = db.Documents.RemoveContributor(c.User.ID, doc.ID)
