@@ -2,6 +2,7 @@ package socket
 
 import "github.com/EggMD/EggMD/internal/ot/selection"
 
+// Client 为一个 WebSocket 客户端连接。
 type Client struct {
 	// Client user data
 	ID        string              `json:"id"`
@@ -15,9 +16,4 @@ type Client struct {
 	done       <-chan bool
 	err        <-chan error
 	disconnect chan<- int
-}
-
-type ConnEvent struct {
-	*EventMessage
-	Client *Client
 }

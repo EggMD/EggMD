@@ -17,22 +17,21 @@ var (
 	ErrInvalidRevision = errors.New("ot/session: invalid revision")
 )
 
-// DocSession is a document collaborative session.
+// DocSession 是一个共享文档编辑会话。
 type DocSession struct {
 	sync.Mutex
 
 	Document *db.Document
 
-	Clients            []*Client // The connection clients
+	Clients            []*Client // 当前连接的客户端
 	LastModifiedUserID uint
 	EditedAfterSave    bool
 
 	Operations []*operation.Operation
-	EventChan  chan ConnEvent
 	Done       chan struct{}
 }
 
-// NewDocSession returns a new document collaborative session of the document `uid`.
+// NewDocSession 根据给定的 uid 返回一个对应共享文档的编辑会话。
 func NewDocSession(uid string) (*DocSession, error) {
 	document, err := db.Documents.GetDocByUID(uid)
 	if err != nil {
@@ -42,19 +41,19 @@ func NewDocSession(uid string) (*DocSession, error) {
 		Mutex:    sync.Mutex{},
 		Document: document,
 
-		Clients:   make([]*Client, 0),
-		EventChan: make(chan ConnEvent),
-		Done:      make(chan struct{}),
+		Clients: make([]*Client, 0),
+		Done:    make(chan struct{}),
 	}, nil
 }
 
-// AutoSaveRoutine save the document into database every 5 seconds.
+// AutoSaveRoutine 每 5 秒保存一次文档内容到数据库中。
 func (d *DocSession) AutoSaveRoutine() {
 	tick := time.NewTicker(5 * time.Second)
 
 	for {
 		select {
 		case <-tick.C:
+			// 前 5 秒内有编辑操作
 			if d.EditedAfterSave {
 				d.Save()
 			}
@@ -66,7 +65,7 @@ func (d *DocSession) AutoSaveRoutine() {
 	}
 }
 
-// appendClient add a new client connection.
+// appendClient 加入一个新的客户端连接。
 func (d *DocSession) appendClient(client *Client) {
 	d.Lock()
 	defer d.Unlock()
@@ -75,7 +74,7 @@ func (d *DocSession) appendClient(client *Client) {
 	d.BroadcastClientsInfo()
 }
 
-// removeClient remove the client connection.
+// removeClient 移除一个新的客户端连接。
 func (d *DocSession) removeClient(client *Client) {
 	d.Lock()
 	defer d.Unlock()
@@ -90,7 +89,7 @@ func (d *DocSession) removeClient(client *Client) {
 		}
 	}
 
-	// If the last client left, destroy the session and save the document.
+	// 如果最后一个客户端也离开了，则销毁该共享文档会话。
 	if len(d.Clients) == 0 {
 		d.Done <- struct{}{}
 		d.Save()
@@ -100,6 +99,7 @@ func (d *DocSession) removeClient(client *Client) {
 	d.BroadcastClientsInfo()
 }
 
+// BroadcastExcept 向除了 client 以外的客户端广播消息。
 func (d *DocSession) BroadcastExcept(client *Client, msg *EventMessage) {
 	for _, c := range d.Clients {
 		if c != client {
@@ -108,18 +108,21 @@ func (d *DocSession) BroadcastExcept(client *Client, msg *EventMessage) {
 	}
 }
 
+// Broadcast 向所有客户单广播消息
 func (d *DocSession) Broadcast(msg *EventMessage) {
 	for _, c := range d.Clients {
 		c.out <- msg
 	}
 }
 
+// SetSelection 为 OT 算法文本选中操作。
 func (d *DocSession) SetSelection(client *Client, sel *selection.Selection) {
 	if client != nil {
 		client.Selection = *sel
 	}
 }
 
+// AddOperation 为 OT 算法新操作。
 func (d *DocSession) AddOperation(revision int, op *operation.Operation) (*operation.Operation, error) {
 	if revision < 0 || len(d.Operations) < revision {
 		return nil, ErrInvalidRevision
@@ -156,6 +159,7 @@ func (d *DocSession) AddOperation(revision int, op *operation.Operation) (*opera
 	return op, nil
 }
 
+// Save 保存当前文档到数据库。
 func (d *DocSession) Save() {
 	log.Trace("Save document: %v", d.Document.UID)
 	opt := db.UpdateDocOptions{
@@ -168,6 +172,7 @@ func (d *DocSession) Save() {
 	d.EditedAfterSave = false
 }
 
+// BroadcastClientsInfo 广播当前所有客户端信息。
 func (d *DocSession) BroadcastClientsInfo() {
 	d.Broadcast(respMessage(CLIENTS, d.Clients))
 }

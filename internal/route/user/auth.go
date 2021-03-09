@@ -18,17 +18,19 @@ const (
 	PROFILE = "user/profile/profile"
 )
 
+// Login 为用户登录页面。
 func Login(c *context.Context) {
 	c.Title("登录")
 
 	redirectTo := c.Query("redirect_to")
 	if len(redirectTo) > 0 {
-		c.SetCookie("redirect_to", redirectTo, 0, conf.Server.Subpath)
+		c.SetCookie("redirect_to", redirectTo, 0, conf.Server.SubPath)
 	}
 
-	c.Success("user/auth/login")
+	c.Success(LOGIN)
 }
 
+// LoginPost 处理用户提交的登录表单。
 func LoginPost(c *context.Context, f form.SignIn) {
 	c.Title("登录")
 
@@ -49,29 +51,30 @@ func LoginPost(c *context.Context, f form.SignIn) {
 		return
 	}
 
-	// Login successfully.
+	// 登录成功
 	_ = c.Session.Set("uid", u.ID)
 	_ = c.Session.Set("uname", u.Name)
 
-	// Clear whatever CSRF has right now, force to generate a new one
-	c.SetCookie(conf.Session.CSRFCookieName, "", -1, conf.Server.Subpath)
+	// 清除现在的 CSRF Token，强制生成一个新的。
+	c.SetCookie(conf.Session.CSRFCookieName, "", -1, conf.Server.SubPath)
 
 	redirectTo, _ := url.QueryUnescape(c.GetCookie("redirect_to"))
-	c.SetCookie("redirect_to", "", -1, conf.Server.Subpath)
+	c.SetCookie("redirect_to", "", -1, conf.Server.SubPath)
 	if tool.IsSameSiteURLPath(redirectTo) {
 		c.Redirect(redirectTo)
 		return
 	}
 
-	c.RedirectSubpath("/")
+	c.RedirectSubPath("/")
 }
 
+// SignUp 为用户注册页面。
 func SignUp(c *context.Context) {
 	c.Title("注册")
-
 	c.Success(SIGNUP)
 }
 
+// SignUpPost 处理用户提交的注册表单。
 func SignUpPost(c *context.Context, f form.Register) {
 	c.Title("注册")
 
@@ -107,43 +110,13 @@ func SignUpPost(c *context.Context, f form.Register) {
 	}
 
 	c.Flash.Success("注册成功！")
-	c.RedirectSubpath("/user/login")
+	c.RedirectSubPath("/user/login")
 }
 
+// SignOut 处理用户的登出操作。
 func SignOut(c *context.Context) {
 	_ = c.Session.Flush()
 	_ = c.Session.Destory(c.Context)
-	c.SetCookie(conf.Session.CSRFCookieName, "", -1, conf.Server.Subpath)
-	c.RedirectSubpath("/")
-}
-
-func Profile(c *context.Context) {
-	loginName := c.Params(":name")
-	if loginName == "" {
-		c.Redirect("/user/login")
-		return
-	}
-
-	profileUser, err := db.Users.GetByLoginName(loginName)
-	if err != nil {
-		c.NotFound()
-		return
-	}
-	c.Data["Owner"] = profileUser
-	c.Title(profileUser.Name)
-
-	showPrivate := c.IsLogged && (profileUser.ID == c.User.ID || c.User.IsAdmin)
-	documents, err := db.Documents.GetUserDocuments(&db.UserDocOptions{
-		UserID:      profileUser.ID,
-		ShowPrivate: showPrivate,
-		Page:        0,
-		PageSize:    0,
-	})
-	if err != nil {
-		c.Error(err)
-		return
-	}
-	c.Data["Docs"] = documents
-
-	c.Success(PROFILE)
+	c.SetCookie(conf.Session.CSRFCookieName, "", -1, conf.Server.SubPath)
+	c.RedirectSubPath("/")
 }

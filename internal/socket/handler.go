@@ -3,10 +3,11 @@ package socket
 import (
 	"time"
 
-	"github.com/EggMD/EggMD/internal/context"
-	"github.com/EggMD/EggMD/internal/tool"
 	"github.com/satori/go.uuid"
 	log "unknwon.dev/clog/v2"
+
+	"github.com/EggMD/EggMD/internal/context"
+	"github.com/EggMD/EggMD/internal/tool"
 )
 
 func Handler(ctx *context.Context, receiver <-chan *EventMessage, sender chan<- *EventMessage, done <-chan bool, disconnect chan<- int, errorChannel <-chan error) (int, string) {
@@ -21,9 +22,9 @@ func Handler(ctx *context.Context, receiver <-chan *EventMessage, sender chan<- 
 		}
 	}
 
+	// 当前用户信息
 	var userID uint
 	var name, avatar string
-
 	if ctx.IsLogged {
 		userID = ctx.User.ID
 		name = ctx.User.Name
@@ -48,7 +49,7 @@ func Handler(ctx *context.Context, receiver <-chan *EventMessage, sender chan<- 
 	}
 	docSession.appendClient(client)
 
-	// Send document content, revision, connected clients.
+	// 向新连接的客户端发送文档基本信息。
 	sender <- &EventMessage{
 		"doc", map[string]interface{}{
 			"document":   docSession.Document.Content,
@@ -62,7 +63,6 @@ func Handler(ctx *context.Context, receiver <-chan *EventMessage, sender chan<- 
 	ticker := time.After(30 * time.Minute)
 	for {
 		select {
-
 		case evt := <-receiver:
 			handleEvent(docSession, client, evt)
 		case <-ticker:

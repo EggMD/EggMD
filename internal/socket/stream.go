@@ -8,11 +8,11 @@ import (
 
 var stream *Stream
 
-// Stream top level
+// Stream 包含下面所有的文档会话。
 type Stream struct {
 	sync.RWMutex
 
-	// key: Document UID
+	// key: 文档 UID
 	documents map[string]*DocSession
 }
 

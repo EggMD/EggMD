@@ -1,16 +1,18 @@
 package socket
 
 import (
+	log "unknwon.dev/clog/v2"
+
 	"github.com/EggMD/EggMD/internal/db"
 	"github.com/EggMD/EggMD/internal/ot/operation"
 	"github.com/EggMD/EggMD/internal/ot/selection"
 )
 
 const (
-	JOIN       = "join"       // Broadcast to all the client connections that a new client attend.
-	CLIENTS    = "clients"    // Online clients info
-	REGISTERED = "registered" // Tell the sender it has been registered in this session.
-	PERMISSION = "permission" // Document permission, it's sent when the document permission changed.
+	JOIN       = "join"       // 新客户端加入的消息。
+	CLIENTS    = "clients"    // 在线客户端信息。
+	REGISTERED = "registered" // 客户端连接成功消息。
+	PERMISSION = "permission" // 文档权限改变消息。
 )
 
 type EventMessage struct {
@@ -27,34 +29,28 @@ func respMessage(name string, data interface{}) *EventMessage {
 }
 
 func handleEvent(doc *DocSession, client *Client, evt *EventMessage) {
-	var canView, canEdit bool
-	if client.UserID == doc.Document.OwnerID {
-		canEdit = true
-	} else {
-		// Check permission
-		canView, canEdit = doc.Document.HasPermission(client.UserID)
-		if !canView {
-			client.disconnect <- 0
-			return
-		}
+	userPermission := doc.Document.HasPermission(client.UserID)
+	// 检查当前用户的文档权限
+	if !userPermission.CanRead() {
+		client.disconnect <- 0
+		return
 	}
 
 	switch evt.Name {
-	case "join":
-		_, edit := doc.Document.HasPermission(client.UserID)
+
+	case "join": // 新客户端加入
 		client.out <- respMessage(REGISTERED, H{
 			"client_id": client.ID,
 			"user_id":   client.UserID,
-			"read_only": !edit,
+			"read_only": !userPermission.CanWrite(),
 		})
 		doc.BroadcastExcept(client, respMessage(JOIN, H{
 			"client_id": client.ID,
 			"username":  client.Name,
 		}))
 
-		// Set permission
-	case "permission":
-		// Only owner can set the permission.
+	case "permission": // 设置权限
+		// 只有文档作者可以设置权限
 		if doc.Document.OwnerID != client.UserID {
 			return
 		}
@@ -66,19 +62,20 @@ func handleEvent(doc *DocSession, client *Client, evt *EventMessage) {
 		doc.Document.Permission = uint(permission)
 		err := db.Documents.SetPermission(doc.Document.UID, uint(permission))
 		if err != nil {
+			log.Error("Failed to set permission: %v", err)
 			return
 		}
 		doc.Broadcast(respMessage(PERMISSION, permission))
 
-		// Kick
+		// 权限改变后，踢出无权限读取权限的用户。
 		for _, client := range doc.Clients {
-			if view, _ := doc.Document.HasPermission(client.UserID); !view && doc.Document.OwnerID != client.UserID {
+			if !doc.Document.HasPermission(client.UserID).CanRead() {
 				client.disconnect <- 0
 			}
 		}
 
-	case "op":
-		if !canEdit {
+	case "op": // 操作
+		if !userPermission.CanWrite() {
 			return
 		}
 
