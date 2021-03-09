@@ -9,78 +9,49 @@ import (
 )
 
 var (
+	// ErrDocumentNotFound 为文档不存在错误。
 	ErrDocumentNotFound = errors.New("document not found")
 )
 
-// DocumentsStore is the persistent interface for users.
+// DocumentsStore 是 Documents 文档操作的实现接口。
 type DocumentsStore interface {
-	// Create creates a new document belongs to one user with the given ownerID.
-	Create(ownerID uint) (*Document, error)
-	// Remove removes the document by given uid.
-	Remove(uid string) error
-	// GetDocByUID returns a document with the given uid.
+	// GetDocByUID 根据指定的 uid 查找并返回一篇文档。
 	GetDocByUID(uid string) (*Document, error)
-	// UpdateByUID updates a document with the given uid.
-	UpdateByUID(uid string, opts UpdateDocOptions) error
-	// GetDocByShortID returns a document with the given shortID.
+	// GetDocByShortID 根据指定的 shortID 查找并返回一篇文档。
 	GetDocByShortID(shortID string) (*Document, error)
-	// GetUserDocuments returns a user's document list.
+	// GetUserDocuments 返回属于指定用户的文档列表。
 	GetUserDocuments(opts *UserDocOptions) (DocumentList, error)
-	// SetPermission sets a document's permission.
+
+	// Create 创建一个属于给定 ownerID 用户的新文档。
+	Create(ownerID uint) (*Document, error)
+	// Remove 根据指定的 uid 删除文档。
+	Remove(uid string) error
+	// UpdateByUID 根据指定的 uid 查找并更新一篇文档。
+	UpdateByUID(uid string, opts UpdateDocOptions) error
+
+	// SetPermission 设置一篇文档的权限。
 	SetPermission(uid string, permission uint) error
-	// AppendEditor creates a editor user to document relation.
-	AppendEditor(userID, documentID uint) error
-	// RemoveEditor remove the editor user relation with the given document.
-	RemoveEditor(userID, documentID uint) error
+
+	// AppendContributor 为一篇文档增加一名协作者。
+	AppendContributor(userID, documentID uint) error
+	// RemoveContributor 从文档中删除用户 userID 的协作者关系。
+	RemoveContributor(userID, documentID uint) error
 }
 
 var Documents DocumentsStore
 
 var _ DocumentsStore = (*documents)(nil)
 
+// DocumentList 为文档列表
+type DocumentList []*Document
+
 type documents struct {
 	*gorm.DB
 }
 
-func (db *documents) Create(ownerID uint) (*Document, error) {
-	shortID, err := GetShortID()
-	if err != nil {
-		return nil, err
-	}
-
-	d := &Document{
-		Title:              "",
-		UID:                uuid.NewV4().String(),
-		ShortID:            shortID,
-		OwnerID:            ownerID,
-		Content:            "",
-		LastModifiedUserID: ownerID,
-		Permission:         0,
-		Users: []User{{
-			Model: gorm.Model{
-				ID: ownerID,
-			},
-		}},
-	}
-	err = db.Model(&Document{}).Create(d).Error
-	return d, err
-}
-
-func (db *documents) Remove(uid string) error {
-	doc, err := db.GetDocByUID(uid)
-	if err != nil {
-		return err
-	}
-	tx := db.Begin()
-	_ = tx.Model(doc).Association("Users").Clear()
-	tx.Model(&Document{}).Delete(&Document{}, "uid = ?", uid)
-	return tx.Commit().Error
-}
-
 func (db *documents) GetDocByUID(uid string) (*Document, error) {
 	var d Document
-	err := db.Preload("Owner").Model(&Document{}).Where("uid = ?", uid).First(&d).Error
-	if err != nil {
+	if err := db.Preload("Owner").Model(&Document{}).Where("uid = ?", uid).First(&d).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, ErrDocumentNotFound
 		}
@@ -89,29 +60,15 @@ func (db *documents) GetDocByUID(uid string) (*Document, error) {
 	return &d, nil
 }
 
-type UpdateDocOptions struct {
-	Title              string
-	Content            string
-	LastModifiedUserID uint
-}
-
-func (db *documents) UpdateByUID(uid string, opts UpdateDocOptions) error {
-	tx := db.Begin()
-	sess := tx.Model(&Document{}).Where("uid = ?", uid).Updates(map[string]interface{}{
-		"title":                 opts.Title,
-		"content":               opts.Content,
-		"last_modified_user_id": opts.LastModifiedUserID,
-	})
-	if err := sess.Error; err != nil {
-		sess.Rollback()
-		return err
+func (db *documents) GetDocByShortID(shortID string) (*Document, error) {
+	var d Document
+	if err := db.Preload("Owner").Model(&Document{}).Where("short_id = ?", shortID).First(&d).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, ErrDocumentNotFound
+		}
+		return nil, err
 	}
-	if sess.RowsAffected != 1 {
-		sess.Rollback()
-		return nil
-	}
-	sess.Commit()
-	return nil
+	return &d, nil
 }
 
 type UserDocOptions struct {
@@ -119,50 +76,6 @@ type UserDocOptions struct {
 	ShowPrivate bool
 	Page        int
 	PageSize    int
-}
-
-type DocumentList []*Document
-
-func (docs DocumentList) loadAttributes(db *gorm.DB) error {
-	if len(docs) == 0 {
-		return nil
-	}
-
-	// Load modified and owner users
-	userSet := make(map[uint]*User)
-	for i := range docs {
-		userSet[docs[i].OwnerID] = nil
-		userSet[docs[i].LastModifiedUserID] = nil
-	}
-	userIDs := make([]uint, 0, len(userSet))
-	for userID := range userSet {
-		userIDs = append(userIDs, userID)
-	}
-	users := make([]*User, 0, len(userIDs))
-	if err := db.Model(&User{}).Where("`id` IN ?", userIDs).Find(&users).Error; err != nil {
-		return errors.Errorf("find users: %v", err)
-	}
-	for _, u := range users {
-		userSet[u.ID] = u
-	}
-	for i, d := range docs {
-		docs[i].LastModifiedUser = userSet[d.LastModifiedUserID]
-		//docs[i].Owner = userSet[d.OwnerID]
-	}
-
-	return nil
-}
-
-func (db *documents) GetDocByShortID(shortID string) (*Document, error) {
-	var d Document
-	err := db.Preload("Owner").Model(&Document{}).Where("short_id = ?", shortID).First(&d).Error
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, ErrDocumentNotFound
-		}
-		return nil, err
-	}
-	return &d, nil
 }
 
 func (db *documents) GetUserDocuments(opts *UserDocOptions) (DocumentList, error) {
@@ -192,22 +105,104 @@ func (db *documents) GetUserDocuments(opts *UserDocOptions) (DocumentList, error
 	return docs, err
 }
 
+func (db *documents) Create(ownerID uint) (*Document, error) {
+	shortID, err := GetShortID()
+	if err != nil {
+		return nil, err
+	}
+
+	newDocument := &Document{
+		Title:              "新的文档",
+		UID:                uuid.NewV4().String(),
+		ShortID:            shortID,
+		OwnerID:            ownerID,
+		Content:            "",
+		LastModifiedUserID: ownerID,
+		Permission:         0, // TODO: 支持设置新建文档时的默认权限
+		Users: []User{{
+			Model: gorm.Model{
+				ID: ownerID,
+			},
+		}},
+	}
+
+	if err := db.Model(&Document{}).Create(newDocument).Error; err != nil {
+		return nil, err
+	}
+	return newDocument, nil
+}
+
+func (db *documents) Remove(uid string) error {
+	doc, err := db.GetDocByUID(uid)
+	if err != nil {
+		return err
+	}
+
+	tx := db.Begin()
+	// 删除所有该文档与注册用户的对应关系。
+	if err = tx.Model(doc).Association("Users").Clear(); err != nil {
+		tx.Rollback()
+		return errors.Wrap(err, "remove document and users association")
+	}
+
+	if err := tx.Model(&Document{}).Delete(&Document{}, "uid = ?", uid).Error; err != nil {
+		tx.Rollback()
+		return errors.Wrap(err, "remove document")
+	}
+	return tx.Commit().Error
+}
+
+type UpdateDocOptions struct {
+	Title              string
+	Content            string
+	LastModifiedUserID uint
+}
+
+func (db *documents) UpdateByUID(uid string, opts UpdateDocOptions) error {
+	return db.Model(&Document{}).Where("uid = ?", uid).Updates(map[string]interface{}{
+		"title":                 opts.Title,
+		"content":               opts.Content,
+		"last_modified_user_id": opts.LastModifiedUserID,
+	}).Error
+}
+
+func (docs DocumentList) loadAttributes(db *gorm.DB) error {
+	if len(docs) == 0 {
+		return nil
+	}
+
+	// 补全文档用户信息
+	userSet := make(map[uint]*User)
+	for i := range docs {
+		userSet[docs[i].OwnerID] = nil
+		userSet[docs[i].LastModifiedUserID] = nil
+	}
+	userIDs := make([]uint, 0, len(userSet))
+	for userID := range userSet {
+		userIDs = append(userIDs, userID)
+	}
+	users := make([]*User, 0, len(userIDs))
+	if err := db.Model(&User{}).Where("`id` IN ?", userIDs).Find(&users).Error; err != nil {
+		return errors.Errorf("find users: %v", err)
+	}
+	for _, u := range users {
+		userSet[u.ID] = u
+	}
+	for i, d := range docs {
+		docs[i].LastModifiedUser = userSet[d.LastModifiedUserID]
+	}
+
+	return nil
+}
+
 func (db *documents) SetPermission(uid string, permission uint) error {
 	if permission < FREELY || permission > PRIVATE {
 		return errors.Errorf("unexpected permission type: %d", permission)
 	}
-
-	tx := db.Begin()
-	tx.Model(&Document{}).Where("uid = ?", uid).Update("permission", permission)
-	return tx.Commit().Error
+	return db.Model(&Document{}).Where("uid = ?", uid).Update("permission", permission).Error
 }
 
-// GetShortID returns a random user salt token.
-func GetShortID() (string, error) {
-	return strutil.RandomChars(9)
-}
-
-func (db *documents) AppendEditor(userID, documentID uint) error {
+func (db *documents) AppendContributor(userID, documentID uint) error {
 	return db.Model(&Document{
 		Model: gorm.Model{
 			ID: documentID,
@@ -219,7 +214,7 @@ func (db *documents) AppendEditor(userID, documentID uint) error {
 	})
 }
 
-func (db *documents) RemoveEditor(userID, documentID uint) error {
+func (db *documents) RemoveContributor(userID, documentID uint) error {
 	return db.Model(&Document{
 		Model: gorm.Model{
 			ID: documentID,
@@ -229,4 +224,9 @@ func (db *documents) RemoveEditor(userID, documentID uint) error {
 			ID: userID,
 		},
 	})
+}
+
+// GetShortID 生成并返回长度为 9 的随机 shortID。
+func GetShortID() (string, error) {
+	return strutil.RandomChars(9)
 }

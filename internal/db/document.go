@@ -5,23 +5,29 @@ import (
 )
 
 const (
-	// Permission
-	// Guest View: 0 1 3 Edit: 0
-	// User View: 0 1 2 3 4 Edit: 0 1 2
-	FREELY    = iota // Anyone can view & edit
-	EDITABLE         // Anyone can view, Signed-in people can edit
-	LIMITED          // Signed-in people can view & edit
-	LOCKED           // Anyone can view, Only owner can edit
-	PROTECTED        // Signed-in people can view, Only owner can edit
-	PRIVATE          // Only owner can view & edit
+	// 	用户权限
+	// 	[游客]
+	//	可查看: 0 1 3
+	//	可编辑: 0
+	//
+	// 	[注册用户]
+	//	可查看: 0 1 2 3 4
+	//	可编辑: 0 1 2
+
+	FREELY    = iota // 0 任何人都可以查看、编辑
+	EDITABLE         // 1 任何人都可以查看，注册用户可编辑
+	LIMITED          // 2 注册用户可以查看、编辑
+	LOCKED           // 3 任何人都可以查看，文档作者可编辑
+	PROTECTED        // 4 注册用户可以查看，文档作者可编辑
+	PRIVATE          // 5 仅文档作者可以查看、编辑
 )
 
-// Document represents the object of individual.
+// Document 为独立的一篇文档对象。
 type Document struct {
 	gorm.Model
 	Title      string `gorm:"NOT NULL"`
-	UID        string `gorm:"UNIQUE"`
-	ShortID    string `gorm:"UNIQUE"`
+	UID        string `gorm:"UNIQUE"` // 文档 UID，显示在编辑页面的 URL 中
+	ShortID    string `gorm:"UNIQUE"` // 文档短链接，用于文档分享链接
 	Content    string
 	Permission uint `gorm:"NOT NULL"`
 
@@ -34,31 +40,53 @@ type Document struct {
 	LastModifiedUser   *User `gorm:"-"`
 }
 
-// HasPermission checks if the user has permission to do the operation.
-func (d *Document) HasPermission(userID uint) (view, edit bool) {
-	if userID == d.OwnerID {
-		return true, true
+// Permission 为文档权限对象。
+type Permission struct {
+	canRead  bool
+	canWrite bool
+}
+
+// MakePermission 根据传入的参数构造并返回一个 Permission 对象。
+func MakePermission(canRead, canWrite bool) *Permission {
+	return &Permission{
+		canRead:  canRead,
+		canWrite: canWrite,
 	}
-	
-	// Guest
+}
+
+// CanRead 返回该权限下是否含可读权限。
+func (p *Permission) CanRead() bool {
+	return p.canRead
+}
+
+// CanWrite 返回该权限下是否含可写权限。
+func (p *Permission) CanWrite() bool {
+	return p.canWrite
+}
+
+// HasPermission 检查指定 userID 所对应的用户是否有相应的操作权限。
+func (d *Document) HasPermission(userID uint) *Permission {
+	if userID == d.OwnerID {
+		return MakePermission(true, true)
+	}
+
+	// 用户 ID 为 0，为未登录游客。
 	if userID == 0 {
 		switch d.Permission {
 		case 0:
-			view = true
-			edit = true
+			return MakePermission(true, true)
 		case 1, 3:
-			view = true
+			return MakePermission(true, false)
 		}
-		return
+		return MakePermission(false, false)
 	}
 
-	// SignedIn User
+	// 注册用户
 	switch d.Permission {
 	case 0, 1, 2:
-		view = true
-		edit = true
+		return MakePermission(true, true)
 	case 3, 4:
-		view = true
+		return MakePermission(true, false)
 	}
-	return
+	return MakePermission(false, false)
 }

@@ -3,9 +3,10 @@ package main
 import (
 	"os"
 
-	"github.com/EggMD/EggMD/internal/cmd"
 	"github.com/urfave/cli"
 	log "unknwon.dev/clog/v2"
+
+	"github.com/EggMD/EggMD/internal/cmd"
 )
 
 var (
@@ -13,6 +14,12 @@ var (
 )
 
 func main() {
+	defer log.Stop()
+	err := log.NewConsole()
+	if err != nil {
+		panic(err)
+	}
+
 	app := cli.NewApp()
 	app.Name = "EggMD"
 	app.Usage = "Self-hosted collaborative documents service"

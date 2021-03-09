@@ -3,15 +3,15 @@ package db
 import (
 	"fmt"
 
+	"github.com/pkg/errors"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	log "unknwon.dev/clog/v2"
 
 	"github.com/EggMD/EggMD/internal/conf"
 )
 
-// Init connects to the database.
-func Init() (*gorm.DB, error) {
+// Init 连接数据库。
+func Init() error {
 	dns := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		conf.Database.User,
 		conf.Database.Password,
@@ -22,17 +22,17 @@ func Init() (*gorm.DB, error) {
 		&gorm.Config{},
 	)
 	if err != nil {
-		log.Fatal("Failed to connect to database: %v", err)
+		return errors.Wrap(err, "connect database")
 	}
 
 	err = db.AutoMigrate(&User{}, &Document{})
 	if err != nil {
-		log.Fatal("Failed to auto migrate tables: %v", err)
+		return errors.Wrap(err, "migrate tables")
 	}
 
-	// Initialize stores, sorted in alphabetical order.
+	// 初始化数据存储，按字母顺序排序。
 	Documents = &documents{DB: db}
 	Users = &users{DB: db}
 
-	return db, nil
+	return nil
 }
