@@ -12,11 +12,12 @@ import (
 	"github.com/yuin/goldmark/text"
 )
 
+// UNTITLED 为无标题文档默认标题。
 const UNTITLED = "Untitled"
 
-// ParseTitle returns the document title by parsing the giving markdown.
-func ParseTitle(content string) string {
-	reader := text.NewReader([]byte(content))
+// ParseTitle 解析并返回输入的 markdown 中的文档标题。
+func ParseTitle(markdown string) string {
+	reader := text.NewReader([]byte(markdown))
 	p := goldmark.DefaultParser()
 	p.AddOptions(parser.WithAttribute())
 	mdAST := p.Parse(reader)
@@ -34,13 +35,13 @@ func ParseTitle(content string) string {
 			return UNTITLED
 		}
 
-		return content[txt.Segment.Start:txt.Segment.Stop]
+		return markdown[txt.Segment.Start:txt.Segment.Stop]
 	}
 
 	return UNTITLED
 }
 
-// RenderMarkdown renders the input markdown string.
+// RenderMarkdown 将输入的 markdown 渲染为 HTML。
 func RenderMarkdown(rawMarkdown string) (string, error) {
 	md := goldmark.New(
 		goldmark.WithExtensions(extension.GFM),
