@@ -15,12 +15,12 @@ var (
 	funcMapOnce sync.Once
 )
 
-// FuncMap returns a list of user-defined template functions.
+// FuncMap 返回用户自定义的模板函数。
 func FuncMap() []template.FuncMap {
 	funcMapOnce.Do(func() {
 		funcMap = []template.FuncMap{map[string]interface{}{
 			"AppSubURL": func() string {
-				return conf.Server.Subpath
+				return conf.Server.SubPath
 			},
 			"Safe": Safe,
 			"DateFmtLong": func(t time.Time) string {

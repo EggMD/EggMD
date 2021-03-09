@@ -5,7 +5,7 @@ import (
 	"math/big"
 )
 
-// RandomChars returns a generated string in given number of random characters.
+// RandomChars 返回指定长度 n 的随机生成字符串。
 func RandomChars(n int) (string, error) {
 	const alphanum = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 

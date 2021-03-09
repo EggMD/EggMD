@@ -1,6 +1,6 @@
 package tool
 
-// IsSameSiteURLPath returns true if the URL path belongs to the same site, false otherwise.
+// IsSameSiteURLPath 判断给定的 url 是否同源。
 // False: //url, http://url, /\url
 // True: /url
 func IsSameSiteURLPath(url string) bool {

@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// HashEmail hashes email address to MD5 string.
+// HashEmail 将电子邮箱地址转换成 MD5 哈希。
 // https://en.gravatar.com/site/implement/hash/
 func HashEmail(email string) string {
 	email = strings.ToLower(strings.TrimSpace(email))
@@ -15,7 +15,7 @@ func HashEmail(email string) string {
 	return hex.EncodeToString(h.Sum(nil))
 }
 
-// AvatarLink returns relative avatar link to the site domain by given email or avatar hash.
+// AvatarLink 根据输入返回对应的 Avatar 头像链接。
 func AvatarLink(input string) (url string) {
 	if strings.ContainsRune(input, '@') {
 		input = HashEmail(input)
