@@ -6,7 +6,7 @@ import (
 	"github.com/unknwon/com"
 )
 
-// Assign assign form values back to the template data.
+// Assign 将表单中的用户输入的字段值再次插入回模板。
 func Assign(form interface{}, data map[string]interface{}) {
 	typ := reflect.TypeOf(form)
 	val := reflect.ValueOf(form)
@@ -20,7 +20,7 @@ func Assign(form interface{}, data map[string]interface{}) {
 		field := typ.Field(i)
 
 		fieldName := field.Tag.Get("form")
-		// Allow ignored fields in the struct
+		// 允许在结构体中使用 `-` tag 来忽略字段。
 		if fieldName == "-" {
 			continue
 		} else if len(fieldName) == 0 {
