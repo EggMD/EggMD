@@ -19,10 +19,16 @@ var (
 func FuncMap() []template.FuncMap {
 	funcMapOnce.Do(func() {
 		funcMap = []template.FuncMap{map[string]interface{}{
+			"AppVersion": func() string {
+				return conf.Server.AppVersion
+			},
 			"AppSubURL": func() string {
 				return conf.Server.SubPath
 			},
 			"Safe": Safe,
+			"Year": func() int {
+				return time.Now().Year()
+			},
 			"DateFmtLong": func(t time.Time) string {
 				return t.Format(time.RFC1123Z)
 			},

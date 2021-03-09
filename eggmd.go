@@ -7,10 +7,12 @@ import (
 	log "unknwon.dev/clog/v2"
 
 	"github.com/EggMD/EggMD/internal/cmd"
+	"github.com/EggMD/EggMD/internal/conf"
+	"github.com/EggMD/EggMD/internal/db"
 )
 
 var (
-	version = ""
+	Version = "development"
 )
 
 func main() {
@@ -20,10 +22,21 @@ func main() {
 		panic(err)
 	}
 
+	err = conf.Init("./conf/app.toml")
+	if err != nil {
+		log.Fatal("Config error: %v", err)
+	}
+	conf.Server.AppVersion = Version
+
+	err = db.Init()
+	if err != nil {
+		log.Fatal("Database error: %v", err)
+	}
+
 	app := cli.NewApp()
 	app.Name = "EggMD"
 	app.Usage = "Self-hosted collaborative documents service"
-	app.Version = version
+	app.Version = Version
 	app.Commands = []cli.Command{
 		cmd.Web,
 	}

@@ -15,7 +15,6 @@ import (
 
 	"github.com/EggMD/EggMD/internal/conf"
 	"github.com/EggMD/EggMD/internal/context"
-	"github.com/EggMD/EggMD/internal/db"
 	"github.com/EggMD/EggMD/internal/form"
 	"github.com/EggMD/EggMD/internal/route"
 	"github.com/EggMD/EggMD/internal/route/document"
@@ -41,16 +40,6 @@ func newMacaron() *macaron.Macaron {
 }
 
 func runWeb(c *cli.Context) error {
-	err := conf.Init("./conf/app.toml")
-	if err != nil {
-		return err
-	}
-
-	err = db.Init()
-	if err != nil {
-		return err
-	}
-
 	m := newMacaron()
 
 	renderOpt := macaron.RenderOptions{

@@ -21,7 +21,8 @@ type SessionOpts struct {
 var Server ServerOpts
 
 type ServerOpts struct {
-	SubPath string
+	AppVersion string
+	SubPath    string
 
 	HTTPAddr string
 	HTTPPort string
