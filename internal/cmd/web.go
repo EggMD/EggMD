@@ -15,12 +15,15 @@ import (
 
 	"github.com/EggMD/EggMD/internal/conf"
 	"github.com/EggMD/EggMD/internal/context"
+	"github.com/EggMD/EggMD/internal/filesystem"
 	"github.com/EggMD/EggMD/internal/form"
 	"github.com/EggMD/EggMD/internal/route"
 	"github.com/EggMD/EggMD/internal/route/document"
 	"github.com/EggMD/EggMD/internal/route/user"
 	"github.com/EggMD/EggMD/internal/socket"
 	"github.com/EggMD/EggMD/internal/template"
+	"github.com/EggMD/EggMD/public"
+	"github.com/EggMD/EggMD/templates"
 )
 
 var Web = cli.Command{
@@ -35,7 +38,13 @@ var Web = cli.Command{
 
 // newMacaron 初始化一个新的 Macaron 实例。
 func newMacaron() *macaron.Macaron {
-	m := macaron.Classic()
+	m := macaron.New()
+	m.Use(macaron.Logger())
+	m.Use(macaron.Recovery())
+	m.Use(macaron.Statics(macaron.StaticOptions{
+		FileSystem: http.FS(public.FS),
+	}, "."))
+	
 	return m
 }
 
@@ -43,10 +52,9 @@ func runWeb(c *cli.Context) error {
 	m := newMacaron()
 
 	renderOpt := macaron.RenderOptions{
-		Directory:         "templates",
-		AppendDirectories: []string{"templates"},
-		Funcs:             template.FuncMap(),
-		IndentJSON:        macaron.Env != macaron.PROD,
+		Funcs:              template.FuncMap(),
+		IndentJSON:         macaron.Env != macaron.PROD,
+		TemplateFileSystem: filesystem.NewFS(templates.FS),
 	}
 	m.Use(macaron.Renderer(renderOpt))
 
