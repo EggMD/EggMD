@@ -1,0 +1,21 @@
+version: '3'
+services:
+  eggmd:
+    image: eggmd/eggmd:latest
+    ports:
+      - "1999:1999"
+    depends_on:
+      - mysql
+    links:
+      - mysql:mysql
+    volumes:
+      - ./eggmd_conf:/etc/EggMD/conf
+
+  mysql:
+    image: mysql:8.0.23
+    restart: always
+    volumes:
+      - ./mysql_data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: EggMD
+      MYSQL_DATABASE: EggMD

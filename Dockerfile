@@ -11,5 +11,5 @@ ADD EggMD /etc/EggMD
 
 RUN chmod 655 /etc/EggMD/EggMD
 
-ENTRYPOINT ["/etc/EggMD/EggMD"]
+ENTRYPOINT ["/etc/EggMD/EggMD web"]
 EXPOSE 1999
