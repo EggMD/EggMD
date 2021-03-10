@@ -7,7 +7,7 @@ RUN echo 'Asia/Shanghai' >/etc/timezone
 RUN mkdir /etc/EggMD
 WORKDIR /etc/EggMD
 
-ADD Elaina /etc/EggMD
+ADD EggMD /etc/EggMD
 
 RUN chmod 655 /etc/EggMD/EggMD
 
