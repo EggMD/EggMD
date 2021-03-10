@@ -25,6 +25,10 @@ new Vue({
         }
     },
     mounted() {
+        if (document.location.protocol === 'https:') {
+            this.url = 'wss://' + location.host + "/e/socket/" + uid
+        }
+        
         this.cm = CodeMirror.fromTextArea(document.getElementById('editor'), {
             mode: {
                 name: 'gfm',
