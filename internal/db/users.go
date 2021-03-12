@@ -37,6 +37,8 @@ type UsersStore interface {
 	GetByID(id uint) (*User, error)
 	// GetByLoginName 根据输入的用户登录名查找用户并返回，若用户不存在则返回 ErrUserNotFound 错误。
 	GetByLoginName(loginName string) (*User, error)
+	// UpdateByID 根据输入的用户 ID 更新用户信息，若用户不存在则返回 ErrUserNotFound 错误。
+	UpdateByID(opts UpdateUserOpts) error
 }
 
 var Users UsersStore
@@ -150,6 +152,38 @@ func (db *users) GetByEmail(email string) (*User, error) {
 		return nil, err
 	}
 	return user, nil
+}
+
+type UpdateUserOpts struct {
+	ID               uint
+	Name             string
+	Email            string
+	KeepEmailPrivate bool
+	AvatarEmail      string
+}
+
+func (db *users) UpdateByID(opts UpdateUserOpts) error {
+	_, err := db.GetByID(opts.ID)
+	if err != nil {
+		return err
+	}
+
+	user, err := db.GetByEmail(opts.Email)
+	if err == nil {
+		if user.ID != opts.ID {
+			return ErrEmailAlreadyUsed
+		}
+	} else if err != ErrUserNotFound {
+		return err
+	}
+
+	return db.Model(&User{}).Where("id = ?", opts.ID).
+		Updates(map[string]interface{}{
+			"name":               opts.Name,
+			"email":              opts.Email,
+			"keep_email_private": opts.KeepEmailPrivate,
+			"avatar_email":       opts.AvatarEmail,
+		}).Error
 }
 
 // GetUserSalt 返回一个随机生成的盐。

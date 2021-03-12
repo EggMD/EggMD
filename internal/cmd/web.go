@@ -44,22 +44,29 @@ func newMacaron() *macaron.Macaron {
 	m.Use(macaron.Statics(macaron.StaticOptions{
 		FileSystem: http.FS(public.FS),
 	}, "."))
-	
+
 	return m
 }
 
 func runWeb(c *cli.Context) error {
 	m := newMacaron()
 
+	var templateFS macaron.TemplateFileSystem
+	if macaron.Env == macaron.PROD {
+		templateFS = filesystem.NewFS(templates.FS)
+	}
+
 	renderOpt := macaron.RenderOptions{
 		Funcs:              template.FuncMap(),
 		IndentJSON:         macaron.Env != macaron.PROD,
-		TemplateFileSystem: filesystem.NewFS(templates.FS),
+		TemplateFileSystem: templateFS,
 	}
 	m.Use(macaron.Renderer(renderOpt))
 
 	reqSignIn := context.Toggle(&context.ToggleOptions{SignInRequired: true})
 	reqSignOut := context.Toggle(&context.ToggleOptions{SignOutRequired: true})
+
+	bindIgnErr := binding.BindIgnErr
 
 	m.Group("", func() {
 		m.Get("/", route.Home)
@@ -67,11 +74,11 @@ func runWeb(c *cli.Context) error {
 		m.Group("/user", func() {
 			m.Group("/login", func() {
 				m.Combo("").Get(user.Login).
-					Post(binding.Bind(form.SignIn{}), user.LoginPost)
+					Post(bindIgnErr(form.SignIn{}), user.LoginPost)
 			})
 			m.Group("/sign_up", func() {
 				m.Combo("").Get(user.SignUp).
-					Post(binding.Bind(form.Register{}), user.SignUpPost)
+					Post(bindIgnErr(form.Register{}), user.SignUpPost)
 			})
 		}, reqSignOut)
 
@@ -79,6 +86,12 @@ func runWeb(c *cli.Context) error {
 			m.Post("/logout", user.SignOut)
 		})
 		m.Get("/user/:name", user.Profile)
+
+		// 用户设置
+		m.Group("/user/settings", func() {
+			m.Combo("/profile").Get(user.ProfileSetting).
+				Post(bindIgnErr(form.Profile{}), user.ProfileSettingPost)
+		}, reqSignIn)
 
 		// 文档
 		m.Group("/doc", func() {
