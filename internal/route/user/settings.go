@@ -9,8 +9,10 @@ import (
 )
 
 const (
-	PROFILE_SETTING = "user/setting/profile"
-	ACCOUNT_SETTING = "user/setting/account"
+	PROFILE_SETTING  = "user/setting/profile"
+	ACCOUNT_SETTING  = "user/setting/account"
+	SECURITY_SETTING = "user/setting/security"
+	DOCUMENT_SETTING = "user/setting/document"
 )
 
 func ProfileSetting(c *context.Context) {
@@ -90,4 +92,30 @@ func AccountSettingPost(c *context.Context, f form.AccountSettings) {
 	}
 	c.Flash.Success("修改密码成功")
 	c.Redirect("/user/settings/account")
+}
+
+func SecuritySetting(c *context.Context) {
+	c.Title("安全设置")
+	c.PageIs("SecuritySetting")
+	c.Success(SECURITY_SETTING)
+}
+
+func SecuritySettingPost(c *context.Context, f form.SecuritySettings) {
+	c.Title("修改密码")
+	c.PageIs("AccountSetting")
+
+	c.Redirect("/user/settings/security")
+}
+
+func DocumentSetting(c *context.Context) {
+	c.Title("文档撰写设置")
+	c.PageIs("DocumentSetting")
+	c.Success(DOCUMENT_SETTING)
+}
+
+func DocumentSettingPost(c *context.Context, f form.DocumentSettings) {
+	c.Title("修改密码")
+	c.PageIs("DocumentSetting")
+
+	c.Redirect("/user/settings/document")
 }

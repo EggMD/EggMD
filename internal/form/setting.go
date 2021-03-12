@@ -27,3 +27,19 @@ type AccountSettings struct {
 func (f *AccountSettings) Validate(ctx *macaron.Context, errs binding.Errors) binding.Errors {
 	return validate(errs, ctx.Data, f)
 }
+
+// SecuritySettings 为账号安全设置
+type SecuritySettings struct {
+}
+
+func (f *SecuritySettings) Validate(ctx *macaron.Context, errs binding.Errors) binding.Errors {
+	return validate(errs, ctx.Data, f)
+}
+
+// DocumentSettings 为文档撰写设置
+type DocumentSettings struct {
+}
+
+func (f *DocumentSettings) Validate(ctx *macaron.Context, errs binding.Errors) binding.Errors {
+	return validate(errs, ctx.Data, f)
+}

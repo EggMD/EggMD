@@ -1,7 +1,7 @@
 <div class="col-md-3 col-lg-3">
     <div class="card p-3">
         <h6 class="dropdown-header">设置</h6>
-        <a href="{{AppSubURL}}/user/settings/profile" class="dropdown-item active">
+        <a href="{{AppSubURL}}/user/settings/profile" class="dropdown-item {{if .PageIsProfileSetting}}active{{end}}">
             <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user" width="24" height="24"
                  viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round"
                  stroke-linejoin="round">
@@ -11,7 +11,7 @@
             </svg>
             个人信息
         </a>
-        <a href="{{AppSubURL}}/user/settings/account" class="dropdown-item">
+        <a href="{{AppSubURL}}/user/settings/account" class="dropdown-item {{if .PageIsAccountSetting}}active{{end}}">
             <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-login" width="24" height="24"
                  viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round"
                  stroke-linejoin="round">
@@ -21,7 +21,7 @@
             </svg>
             账号
         </a>
-        <a href="{{AppSubURL}}/user/settings/security" class="dropdown-item">
+        <a href="{{AppSubURL}}/user/settings/security" class="dropdown-item {{if .PageIsSecuritySetting}}active{{end}}">
             <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-shield-lock" width="24"
                  height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
                  stroke-linecap="round" stroke-linejoin="round">
@@ -32,7 +32,7 @@
             </svg>
             安全
         </a>
-        <a href="{{AppSubURL}}/user/settings/document" class="dropdown-item">
+        <a href="{{AppSubURL}}/user/settings/document" class="dropdown-item {{if .PageIsDocumentSetting}}active{{end}}">
             <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-pencil" width="24" height="24"
                  viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round"
                  stroke-linejoin="round">

@@ -1,0 +1,15 @@
+{{template "base/header" .}}
+<div class="row row-cards">
+    {{template "user/setting/sidebar" .}}
+    <div class="col-md-9 col-lg-9">
+        <div class="card p-4">
+            <form method="post">
+                {{.CSRFTokenHTML}}
+                {{template "base/alert" .}}
+                <h1>文档撰写设置</h1>
+                <hr class="my-3">
+            </form>
+        </div>
+    </div>
+</div>
+{{template "base/footer" .}}

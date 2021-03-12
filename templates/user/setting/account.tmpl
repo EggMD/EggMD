@@ -1,0 +1,30 @@
+{{template "base/header" .}}
+<div class="row row-cards">
+    {{template "user/setting/sidebar" .}}
+    <div class="col-md-9 col-lg-9">
+        <div class="card p-4">
+            <form method="post">
+                {{.CSRFTokenHTML}}
+                {{template "base/alert" .}}
+                <h1>修改密码</h1>
+                <hr class="my-3">
+                <div class="mb-3">
+                    <label class="form-label required">当前密码</label>
+                    <input type="password" class="form-control" name="password">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label required">新的密码</label>
+                    <input type="password" class="form-control" name="new_password">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label required">重新输入新的密码</label>
+                    <input type="password" class="form-control" name="retype">
+                </div>
+                <label>
+                    <input type="submit" class="btn btn-primary" value="修改密码"/>
+                </label>
+            </form>
+        </div>
+    </div>
+</div>
+{{template "base/footer" .}}

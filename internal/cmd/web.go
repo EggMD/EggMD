@@ -93,6 +93,10 @@ func runWeb(c *cli.Context) error {
 				Post(bindIgnErr(form.ProfileSettings{}), user.ProfileSettingPost)
 			m.Combo("/account").Get(user.AccountSetting).
 				Post(bindIgnErr(form.AccountSettings{}), user.AccountSettingPost)
+			m.Combo("/security").Get(user.SecuritySetting).
+				Post(bindIgnErr(form.SecuritySettings{}), user.SecuritySettingPost)
+			m.Combo("/document").Get(user.DocumentSetting).
+				Post(bindIgnErr(form.DocumentSettings{}), user.DocumentSettingPost)
 		}, reqSignIn)
 
 		// 文档
