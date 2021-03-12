@@ -10,6 +10,7 @@ WORKDIR /etc/EggMD
 ADD EggMD /etc/EggMD
 
 RUN chmod 655 /etc/EggMD/EggMD
+ENV MACARON_ENV production
 
 ENTRYPOINT ["/etc/EggMD/EggMD", "web"]
 EXPOSE 1999
