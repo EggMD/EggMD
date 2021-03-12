@@ -90,7 +90,9 @@ func runWeb(c *cli.Context) error {
 		// 用户设置
 		m.Group("/user/settings", func() {
 			m.Combo("/profile").Get(user.ProfileSetting).
-				Post(bindIgnErr(form.Profile{}), user.ProfileSettingPost)
+				Post(bindIgnErr(form.ProfileSettings{}), user.ProfileSettingPost)
+			m.Combo("/account").Get(user.AccountSetting).
+				Post(bindIgnErr(form.AccountSettings{}), user.AccountSettingPost)
 		}, reqSignIn)
 
 		// 文档

@@ -10,13 +10,19 @@ import (
 
 const (
 	PROFILE_SETTING = "user/setting/profile"
+	ACCOUNT_SETTING = "user/setting/account"
 )
 
 func ProfileSetting(c *context.Context) {
+	c.Title("个人信息")
+	c.PageIs("ProfileSetting")
 	c.Success(PROFILE_SETTING)
 }
 
-func ProfileSettingPost(c *context.Context, f form.Profile) {
+func ProfileSettingPost(c *context.Context, f form.ProfileSettings) {
+	c.Title("个人信息")
+	c.PageIs("ProfileSetting")
+
 	if c.HasError() {
 		c.Success(PROFILE_SETTING)
 		return
@@ -44,4 +50,44 @@ func ProfileSettingPost(c *context.Context, f form.Profile) {
 	}
 	c.Flash.Success("修改个人信息成功")
 	c.Redirect("/user/settings/profile")
+}
+
+func AccountSetting(c *context.Context) {
+	c.Title("修改密码")
+	c.PageIs("AccountSetting")
+	c.Success(ACCOUNT_SETTING)
+}
+
+func AccountSettingPost(c *context.Context, f form.AccountSettings) {
+	c.Title("修改密码")
+	c.PageIs("AccountSetting")
+
+	if f.NewPassword != f.Retype {
+		c.RenderWithErr("两次密码输入不一致", ACCOUNT_SETTING, &f)
+		return
+	}
+
+	u := db.User{
+		Password: f.Password,
+		Salt:     c.User.Salt,
+	}
+	u.EncodePassword()
+	if c.User.Password != u.Password {
+		c.RenderWithErr("密码不正确", ACCOUNT_SETTING, &f)
+		return
+	}
+
+	c.User.Password = f.NewPassword
+	c.User.EncodePassword()
+
+	err := db.Users.UpdateByID(db.UpdateUserOpts{
+		ID:       c.User.ID,
+		Password: c.User.Password,
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	c.Flash.Success("修改密码成功")
+	c.Redirect("/user/settings/account")
 }

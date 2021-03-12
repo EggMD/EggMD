@@ -49,14 +49,6 @@ type users struct {
 	*gorm.DB
 }
 
-type CreateUserOpts struct {
-	Name      string
-	LoginName string
-	Email     string
-	Password  string
-	Admin     bool
-}
-
 func (db *users) Authenticate(email, password string) (*User, error) {
 	user := new(User)
 	err := db.Where("email = ?", email).First(user).Error
@@ -69,6 +61,14 @@ func (db *users) Authenticate(email, password string) (*User, error) {
 	}
 	// 用户凭证错误，或用户不存在
 	return nil, ErrBadCredentials
+}
+
+type CreateUserOpts struct {
+	Name      string
+	LoginName string
+	Email     string
+	Password  string
+	Admin     bool
 }
 
 func (db *users) Create(opts CreateUserOpts) (*User, error) {
@@ -157,6 +157,7 @@ func (db *users) GetByEmail(email string) (*User, error) {
 type UpdateUserOpts struct {
 	ID               uint
 	Name             string
+	Password         string
 	Email            string
 	KeepEmailPrivate bool
 	AvatarEmail      string
@@ -168,9 +169,9 @@ func (db *users) UpdateByID(opts UpdateUserOpts) error {
 		return err
 	}
 
-	user, err := db.GetByEmail(opts.Email)
+	userEmail, err := db.GetByEmail(opts.Email)
 	if err == nil {
-		if user.ID != opts.ID {
+		if userEmail.ID != opts.ID {
 			return ErrEmailAlreadyUsed
 		}
 	} else if err != ErrUserNotFound {
@@ -178,12 +179,13 @@ func (db *users) UpdateByID(opts UpdateUserOpts) error {
 	}
 
 	return db.Model(&User{}).Where("id = ?", opts.ID).
-		Updates(map[string]interface{}{
-			"name":               opts.Name,
-			"email":              opts.Email,
-			"keep_email_private": opts.KeepEmailPrivate,
-			"avatar_email":       opts.AvatarEmail,
-		}).Error
+		Updates(&User{
+			Name:        opts.Name,
+			Email:       opts.Email,
+			Password:    opts.Password,
+			AvatarEmail: opts.AvatarEmail,
+		}).
+		Update("keep_email_private", opts.KeepEmailPrivate).Error
 }
 
 // GetUserSalt 返回一个随机生成的盐。
