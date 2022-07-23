@@ -1,44 +1,57 @@
 package db
 
 import (
-	"strings"
-	"unicode/utf8"
+	"context"
+	"crypto/sha256"
+	"crypto/subtle"
+	"fmt"
 
 	"github.com/pkg/errors"
+	"github.com/satori/go.uuid"
+	"github.com/thanhpk/randstr"
+	"golang.org/x/crypto/pbkdf2"
 	"gorm.io/gorm"
-
-	"github.com/EggMD/EggMD/internal/cryptoutil"
-	"github.com/EggMD/EggMD/internal/strutil"
 )
 
 var (
-	// ErrUserNotFound 为用户不存在错误。
+	// ErrUserNotFound is returned when a user is not found.
 	ErrUserNotFound = errors.New("user not found")
-	// ErrUserAlreadyExists 为用户已存在（已重复）错误。
+	// ErrUserAlreadyExists is returned when a user already exists.
 	ErrUserAlreadyExists = errors.New("user already exists")
-	// ErrEmptyUserName 为用户名为空错误。
-	ErrEmptyUserName = errors.New("user name is empty")
-	// ErrEmailAlreadyUsed 为电子邮箱地址已存在错误。
-	ErrEmailAlreadyUsed = errors.New("email is already used")
-	// ErrBadCredentials 为用户登录凭证错误。
+	// ErrLoginNameAlreadyExists is returned when a login name already exists.
+	ErrLoginNameAlreadyExists = errors.New("login name already exists")
+	// ErrEmailAlreadyExists is returned when an email already exists.
+	ErrEmailAlreadyExists = errors.New("email already exists")
+	// ErrBadCredentials is returned when a user's credentials are incorrect.
 	ErrBadCredentials = errors.New("bad credentials")
 )
 
-// UsersStore 是 Users 用户操作的实现接口。
+// UsersStore is the persistent interface for users.
 type UsersStore interface {
-	// Authenticate 检查根据输入的邮箱与密码验证用户。
-	Authenticate(email, password string) (*User, error)
-	// Create 在数据库中创建一个新的用户。
-	// 若用户名已存在，则会返回 ErrUserAlreadyExists 错误，若电子邮箱已被其他用户使用，则返回 ErrEmailAlreadyUsed 错误。
-	Create(opts CreateUserOpts) (*User, error)
-	// GetByEmail 根据输入的电子邮箱地址查找用户并返回。
-	GetByEmail(email string) (*User, error)
-	// GetByID 根据输入的用户 ID 查找用户并返回，若用户不存在则返回 ErrUserNotFound 错误。
-	GetByID(id uint) (*User, error)
-	// GetByLoginName 根据输入的用户登录名查找用户并返回，若用户不存在则返回 ErrUserNotFound 错误。
-	GetByLoginName(loginName string) (*User, error)
-	// UpdateByID 根据输入的用户 ID 更新用户信息，若用户不存在则返回 ErrUserNotFound 错误。
-	UpdateByID(opts UpdateUserOpts) error
+	// Authenticate validates phone and password.
+	// It returns ErrBadCredentials when validate failed.
+	Authenticate(ctx context.Context, email, password string) (*User, error)
+	// Create creates a new user and persists to database.
+	// It returns the user when it created.
+	Create(ctx context.Context, opts CreateUserOptions) (*User, error)
+	// GetByID returns the user with the given ID.
+	GetByID(ctx context.Context, id uint) (*User, error)
+	// GetByIDs returns the users with the given IDs.
+	GetByIDs(ctx context.Context, ids ...uint) ([]*User, error)
+	// GetByUID returns the user with the given UID.
+	GetByUID(ctx context.Context, uid string) (*User, error)
+	// GetByEmail returns the user with given email.
+	GetByEmail(ctx context.Context, email string) (*User, error)
+	// Update updates the user with the given ID and options.
+	Update(ctx context.Context, id uint, opts UpdateUserOptions) error
+	// ChangePassword changes the password of the user.
+	ChangePassword(ctx context.Context, id uint, oldPassword, newPassword string) error
+	// SetPassword sets the password of the user with the given ID.
+	SetPassword(ctx context.Context, id uint, newPassword string) error
+}
+
+func NewUsersStore(db *gorm.DB) UsersStore {
+	return &users{db}
 }
 
 var Users UsersStore
@@ -49,155 +62,189 @@ type users struct {
 	*gorm.DB
 }
 
-func (db *users) Authenticate(email, password string) (*User, error) {
-	user := new(User)
-	err := db.Where("email = ?", email).First(user).Error
-	if err != nil && err != gorm.ErrRecordNotFound {
+// User represents the user.
+type User struct {
+	gorm.Model `json:"-"`
+
+	UID       string `gorm:"UNIQUE"`
+	NickName  string
+	LoginName string `gorm:"UNIQUE"`
+	Email     string `gorm:"UNIQUE"`
+	Password  string `json:"-"`
+	Salt      string `json:"-"`
+}
+
+// EncodePassword encodes the password with the user's salt.
+func (u *User) EncodePassword() {
+	newPasswd := pbkdf2.Key([]byte(u.Password), []byte(u.Salt), 10000, 50, sha256.New)
+	u.Password = fmt.Sprintf("%x", newPasswd)
+}
+
+// ValidatePassword validates the password.
+func (u *User) ValidatePassword(password string) bool {
+	newUser := &User{Password: password, Salt: u.Salt}
+	newUser.EncodePassword()
+	return subtle.ConstantTimeCompare([]byte(u.Password), []byte(newUser.Password)) == 1
+}
+
+func (db *users) Authenticate(ctx context.Context, email, password string) (*User, error) {
+	var user User
+	err := db.WithContext(ctx).Where("email = ?", email).First(&user).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrBadCredentials
+		}
 		return nil, errors.Wrap(err, "get user")
 	}
 
-	if err == nil && user.ValidatePassword(password) {
-		return user, nil
+	if user.ValidatePassword(password) {
+		return &user, nil
 	}
-	// 用户凭证错误，或用户不存在
 	return nil, ErrBadCredentials
 }
 
-type CreateUserOpts struct {
-	Name      string
+type CreateUserOptions struct {
+	NickName  string
 	LoginName string
 	Email     string
 	Password  string
-	Admin     bool
 }
 
-func (db *users) Create(opts CreateUserOpts) (*User, error) {
-	name := opts.Name
-	loginName := opts.LoginName
-	email := opts.Email
-
-	err := isUsernameAllowed(name)
+func (db *users) Create(ctx context.Context, opts CreateUserOptions) (*User, error) {
+	_, err := db.GetByLoginName(ctx, opts.LoginName)
 	if err != nil {
-		return nil, err
+		if !errors.Is(err, ErrUserNotFound) {
+			return nil, errors.Wrap(err, "get user by login name")
+		}
+	} else {
+		return nil, ErrLoginNameAlreadyExists
 	}
 
-	_, err = db.GetByLoginName(loginName)
-	if err == nil {
-		return nil, ErrUserAlreadyExists
-	} else if err != ErrUserNotFound {
-		return nil, err
-	}
-
-	_, err = db.GetByEmail(email)
-	if err == nil {
-		return nil, ErrEmailAlreadyUsed
-	} else if err != ErrUserNotFound {
-		return nil, err
-	}
-
-	user := &User{
-		Name:             name,
-		Email:            email,
-		KeepEmailPrivate: true, // 默认隐藏用户电子邮箱地址
-		Password:         opts.Password,
-		LoginName:        opts.LoginName,
-		IsAdmin:          opts.Admin,
-		Avatar:           cryptoutil.MD5(email),
-		AvatarEmail:      email,
-	}
-
-	user.Salt, err = GetUserSalt()
+	_, err = db.GetByEmail(ctx, opts.Email)
 	if err != nil {
-		return nil, err
+		if !errors.Is(err, ErrUserNotFound) {
+			return nil, errors.Wrap(err, "get user by email")
+		}
+	} else {
+		return nil, ErrEmailAlreadyExists
 	}
+
+	user := User{
+		UID:       uuid.NewV4().String(),
+		NickName:  opts.NickName,
+		LoginName: opts.LoginName,
+		Email:     opts.Email,
+		Password:  opts.Password,
+	}
+
+	user.Salt = generateUserSalt()
 	user.EncodePassword()
 
-	return user, db.DB.Create(user).Error
+	return &user, db.WithContext(ctx).Create(&user).Error
 }
 
-func (db *users) GetByID(id uint) (*User, error) {
-	user := new(User)
-	if err := db.Model(&User{}).Where(&User{
-		Model: gorm.Model{ID: id},
-	}).First(user).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
+func (db *users) getBy(ctx context.Context, whereQuery interface{}, whereArgs ...interface{}) (*User, error) {
+	var user User
+	if err := db.WithContext(ctx).Model(&User{}).Where(whereQuery, whereArgs...).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrUserNotFound
 		}
 		return nil, err
 	}
-	return user, nil
+	return &user, nil
 }
 
-func (db *users) GetByLoginName(loginName string) (*User, error) {
-	user := new(User)
-	if err := db.Model(&User{}).Where(&User{
-		LoginName: loginName,
-	}).First(user).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, ErrUserNotFound
-		}
+func (db *users) GetByID(ctx context.Context, id uint) (*User, error) {
+	return db.getBy(ctx, "id = ?", id)
+}
+
+func (db *users) GetByUID(ctx context.Context, uid string) (*User, error) {
+	return db.getBy(ctx, "uid = ?", uid)
+}
+
+func (db *users) GetByLoginName(ctx context.Context, loginName string) (*User, error) {
+	return db.getBy(ctx, "login_name = ?", loginName)
+}
+
+func (db *users) GetByEmail(ctx context.Context, email string) (*User, error) {
+	return db.getBy(ctx, "email = ?", email)
+}
+
+func (db *users) GetByIDs(ctx context.Context, ids ...uint) ([]*User, error) {
+	var users []*User
+	if err := db.WithContext(ctx).Model(&User{}).Where("id IN (?)", ids).Find(&users).Error; err != nil {
 		return nil, err
 	}
-	return user, nil
+	return users, nil
 }
 
-func (db *users) GetByEmail(email string) (*User, error) {
-	user := new(User)
-	if err := db.Model(&User{}).Where(&User{
-		Email: email,
-	}).First(user).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, ErrUserNotFound
-		}
-		return nil, err
-	}
-	return user, nil
+type UpdateUserOptions struct {
+	NickName  string
+	LoginName string
 }
 
-type UpdateUserOpts struct {
-	ID               uint
-	Name             string
-	Password         string
-	Email            string
-	KeepEmailPrivate bool
-	AvatarEmail      string
-}
-
-func (db *users) UpdateByID(opts UpdateUserOpts) error {
-	_, err := db.GetByID(opts.ID)
+func (db *users) Update(ctx context.Context, id uint, opts UpdateUserOptions) error {
+	_, err := db.GetByID(ctx, id)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "get user by ID")
 	}
 
-	userEmail, err := db.GetByEmail(opts.Email)
+	u, err := db.GetByLoginName(ctx, opts.LoginName)
 	if err == nil {
-		if userEmail.ID != opts.ID {
-			return ErrEmailAlreadyUsed
+		if u.ID != id {
+			return ErrLoginNameAlreadyExists
 		}
 	} else if err != ErrUserNotFound {
-		return err
+		return errors.Wrap(err, "get user by login name")
 	}
 
-	return db.Model(&User{}).Where("id = ?", opts.ID).
+	if err := db.WithContext(ctx).Model(&User{}).
+		Where("id = ?", id).
 		Updates(&User{
-			Name:        opts.Name,
-			Email:       opts.Email,
-			Password:    opts.Password,
-			AvatarEmail: opts.AvatarEmail,
-		}).
-		Update("keep_email_private", opts.KeepEmailPrivate).Error
+			NickName:  opts.NickName,
+			LoginName: opts.LoginName,
+		}).Error; err != nil {
+		return errors.Wrap(err, "update user")
+	}
+
+	return nil
 }
 
-// GetUserSalt 返回一个随机生成的盐。
-func GetUserSalt() (string, error) {
-	return strutil.RandomChars(10)
-}
+func (db *users) ChangePassword(ctx context.Context, id uint, oldPassword, newPassword string) error {
+	user, err := db.GetByID(ctx, id)
+	if err != nil {
+		return errors.Wrap(err, "get user by ID")
+	}
 
-// isUsernameAllowed 检查用户名是否合法。
-func isUsernameAllowed(name string) error {
-	name = strings.TrimSpace(strings.ToLower(name))
-	if utf8.RuneCountInString(name) == 0 {
-		return ErrEmptyUserName
+	if !user.ValidatePassword(oldPassword) {
+		return ErrBadCredentials
+	}
+
+	user.Password = newPassword
+	user.EncodePassword()
+
+	if err := db.WithContext(ctx).Model(&User{}).Where("id = ?", id).Update("password", user.Password).Error; err != nil {
+		return errors.Wrap(err, "update user password")
 	}
 	return nil
+}
+
+func (db *users) SetPassword(ctx context.Context, id uint, newPassword string) error {
+	user, err := db.GetByID(ctx, id)
+	if err != nil {
+		return errors.Wrap(err, "get user by ID")
+	}
+
+	user.Password = newPassword
+	user.EncodePassword()
+
+	if err := db.WithContext(ctx).Model(&User{}).Where("id = ?", id).Update("password", user.Password).Error; err != nil {
+		return errors.Wrap(err, "update user password")
+	}
+	return nil
+}
+
+// generateUserSalt generates a random salt.
+func generateUserSalt() string {
+	return randstr.String(10)
 }

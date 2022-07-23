@@ -18,3 +18,5 @@
 .task/
 
 EggMD
+.vscode/
+.DS_Store
