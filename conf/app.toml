@@ -1,21 +1,12 @@
-[Security]
-SecretKey = ""
-
-[Session]
-CookieName = "eggmd"
-GCInterval = 3600
-MaxLifeTime = 86400
-CSRFCookieName = "_csrf"
-
 [Server]
-SubPath = ""
 HTTPAddr = "0.0.0.0"
 HTTPPort = "1999"
 
 [Database]
-Host = "localhost"
+Host = "localhost:5432"
 Name = "EggMD"
-User = "root"
-Password = "root"
+User = "johnwu"
+Password = "123456"
+SSLMode = "disable"
 MaxOpenConns = 50
 MaxIdleConns = 100

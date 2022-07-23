@@ -1,27 +1,26 @@
 package conf
 
 import (
-	"github.com/BurntSushi/toml"
+	"github.com/pelletier/go-toml"
+	"github.com/pkg/errors"
 )
 
-// Init 解析配置文件并初始化配置信息。
 func Init(configPath string) error {
-	var conf struct {
-		Security SecurityOpts
-		Session  SessionOpts
-		Server   ServerOpts
-		Database DatabaseOpts
-	}
-
-	_, err := toml.DecodeFile(configPath, &conf)
+	config, err := toml.LoadFile(configPath)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "load toml config file")
+	}
+	return parse(config)
+}
+
+func parse(config *toml.Tree) error {
+	if err := config.Get("Server").(*toml.Tree).Unmarshal(&Server); err != nil {
+		return errors.Wrap(err, "mapping [App] section")
 	}
 
-	Security = conf.Security
-	Session = conf.Session
-	Server = conf.Server
-	Database = conf.Database
+	if err := config.Get("Database").(*toml.Tree).Unmarshal(&Database); err != nil {
+		return errors.Wrap(err, "mapping [Database] section")
+	}
 
 	return nil
 }
